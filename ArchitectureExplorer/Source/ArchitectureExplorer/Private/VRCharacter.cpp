@@ -2,9 +2,13 @@
 
 
 #include "VRCharacter.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -26,7 +30,8 @@ AVRCharacter::AVRCharacter()
 void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	DestinationMarker->SetVisibility(false);
 }
 
 // Called every frame
@@ -48,14 +53,20 @@ void AVRCharacter::SyncPlayspaceMovementToActor()
 
 void AVRCharacter::UpdateDestinationMarker()
 {
+	if (!DestinationMarker) return;
+
 	FHitResult HitResult;
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = Start + Camera->GetForwardVector() * MaxTeleportDistance;
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
 	if (bHit)
 	{
-		//DrawDebugLine(GetWorld(), Start, End, FColor::Red);
+		DestinationMarker->SetVisibility(true);
 		DestinationMarker->SetWorldLocation(HitResult.Location);
+	}
+	else
+	{
+		DestinationMarker->SetVisibility(false);
 	}
 }
 
@@ -66,6 +77,8 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
+
+	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
 }
 
 void AVRCharacter::MoveForward(float AxisValue)
@@ -80,4 +93,40 @@ void AVRCharacter::MoveRight(float AxisValue)
 	if (!Camera) return;
 	float MoveValue = FMath::Clamp<float>(AxisValue, -1, 1);
 	AddMovementInput(Camera->GetRightVector() * MoveValue);
+}
+
+void AVRCharacter::BeginTeleport()
+{
+	if (!DestinationMarker)return;
+
+	auto PlayerController = Cast<APlayerController>(GetController());
+	if (!PlayerController) return;
+
+	auto PlayerCameraManager = PlayerController->PlayerCameraManager;
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StartCameraFade(0.f, 1.f, TeleportFadeDuration, FLinearColor::Black);
+	}
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AVRCharacter::EndTeleport, TeleportFadeDuration);
+}
+
+void AVRCharacter::EndTeleport()
+{
+	if (!DestinationMarker) return;
+
+	auto CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	FVector NewLocation = DestinationMarker->GetComponentLocation();
+	NewLocation.Z += CapsuleHalfHeight;
+	SetActorLocation(NewLocation);
+
+	auto PlayerController = Cast<APlayerController>(GetController());
+	if (!PlayerController) return;
+
+	auto PlayerCameraManager = PlayerController->PlayerCameraManager;
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StartCameraFade(1.f, 0.f, TeleportFadeDuration, FLinearColor::Black);
+	}
 }

@@ -31,9 +31,9 @@ public:
 
 private:
 	void MoveForward(float AxisValue);
-
 	void MoveRight(float AxisValue);
-
+	void BeginTeleport();
+	void EndTeleport();
 	void UpdateDestinationMarker();
 
 	UPROPERTY(VisibleAnywhere)
@@ -47,4 +47,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float MaxTeleportDistance = 1000.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TeleportFadeDuration = 1.f;
 };
