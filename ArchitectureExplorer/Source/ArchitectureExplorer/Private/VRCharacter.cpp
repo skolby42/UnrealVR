@@ -3,6 +3,8 @@
 
 #include "VRCharacter.h"
 #include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -15,6 +17,9 @@ AVRCharacter::AVRCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera")));
 	Camera->SetupAttachment(VRRoot);
+
+	DestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName(TEXT("Destination Marker")));
+	DestinationMarker->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -29,15 +34,29 @@ void AVRCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	SyncActorPlayspaceMovement();
+	SyncPlayspaceMovementToActor();
+	UpdateDestinationMarker();
 }
 
-void AVRCharacter::SyncActorPlayspaceMovement()
+void AVRCharacter::SyncPlayspaceMovementToActor()
 {
 	FVector NewCameraOffset = Camera->GetComponentLocation() - GetActorLocation();
 	NewCameraOffset.Z = 0.f;  // Only move in X Y.  Use FVector::VectorPlaneProject() if Z is not up
 	AddActorWorldOffset(NewCameraOffset);
 	VRRoot->AddWorldOffset(-NewCameraOffset);
+}
+
+void AVRCharacter::UpdateDestinationMarker()
+{
+	FHitResult HitResult;
+	FVector Start = Camera->GetComponentLocation();
+	FVector End = Start + Camera->GetForwardVector() * MaxTeleportDistance;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+	if (bHit)
+	{
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red);
+		DestinationMarker->SetWorldLocation(HitResult.Location);
+	}
 }
 
 // Called to bind functionality to input
@@ -62,4 +81,3 @@ void AVRCharacter::MoveRight(float AxisValue)
 	float MoveValue = FMath::Clamp<float>(AxisValue, -1, 1);
 	AddMovementInput(Camera->GetRightVector() * MoveValue);
 }
-

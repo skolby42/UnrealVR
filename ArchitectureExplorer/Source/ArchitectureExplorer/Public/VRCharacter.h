@@ -24,7 +24,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SyncActorPlayspaceMovement();
+	void SyncPlayspaceMovementToActor();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -34,9 +34,17 @@ private:
 
 	void MoveRight(float AxisValue);
 
+	void UpdateDestinationMarker();
+
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* VRRoot = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* DestinationMarker;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxTeleportDistance = 1000.f;
 };
