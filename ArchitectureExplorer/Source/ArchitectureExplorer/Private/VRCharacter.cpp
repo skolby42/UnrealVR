@@ -11,8 +11,11 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "MotionControllerComponent.h"
 #include "NavigationSystem.h"
 #include "TimerManager.h"
+
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -20,17 +23,25 @@ AVRCharacter::AVRCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	VRRoot = CreateDefaultSubobject<USceneComponent>(FName(TEXT("VR Root")));
+	VRRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VR Root"));
 	VRRoot->SetupAttachment(GetRootComponent());
 
-	Camera = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera")));
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(VRRoot);
 
-	DestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName(TEXT("Destination Marker")));
+	DestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Destination Marker"));
 	DestinationMarker->SetupAttachment(GetRootComponent());
 
-	PostProcessComponent = CreateDefaultSubobject <UPostProcessComponent>(FName(TEXT("Post Process Component")));
+	PostProcessComponent = CreateDefaultSubobject <UPostProcessComponent>(TEXT("Post Process Component"));
 	PostProcessComponent->SetupAttachment(GetRootComponent());
+
+	LeftMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("Left Motion Controller"));
+	LeftMotionController->SetupAttachment(VRRoot);
+	LeftMotionController->SetTrackingSource(EControllerHand::Left);
+
+	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("Right Motion Controller"));
+	RightMotionController->SetupAttachment(VRRoot);
+	RightMotionController->SetTrackingSource(EControllerHand::Right);
 }
 
 // Called when the game starts or when spawned
@@ -110,8 +121,10 @@ void AVRCharacter::SyncActorToPlayspaceMovement()
 
 void AVRCharacter::UpdateDestinationMarker()
 {
+	if (!DestinationMarker) return;
+
 	FVector Location;
-	bool bHasDestination = FindTeleportDestination(Location);
+	bool bHasDestination = FindTeleportDestinationController(Location);
 
 	if (bHasDestination)
 	{
@@ -124,15 +137,45 @@ void AVRCharacter::UpdateDestinationMarker()
 	}
 }
 
-bool AVRCharacter::FindTeleportDestination(FVector& OutLocation) const
+bool AVRCharacter::FindTeleportDestinationController(FVector& OutLocation) const
 {
-	if (!DestinationMarker) return false;
+	if (!DestinationMarker || !RightMotionController) return false;
+
+	FHitResult HitResult;
+
+	FVector LookVector = RightMotionController->GetForwardVector();
+	LookVector = LookVector.RotateAngleAxis(30.f, RightMotionController->GetRightVector());
+
+	FVector Start = RightMotionController->GetComponentLocation() + LookVector * 10.f;  // Start line trace in front of motion controller
+	FVector End = Start + LookVector * MaxTeleportDistance;
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f, 0.0f, 2.0f);
+
+	if (!bHit) return false;
+
+	FNavLocation NavLocation;
+
+	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	bool bOnNavMesh = NavSystem->ProjectPointToNavigation(HitResult.Location, NavLocation, TeleportProjectionExtent);
+
+	if (!bOnNavMesh) return false;
+
+	OutLocation = NavLocation.Location;
+
+	return true;
+}
+
+bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
+{
+	if (!DestinationMarker || !Camera) return false;
 
 	FHitResult HitResult;
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = Start + Camera->GetForwardVector() * MaxTeleportDistance;
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f, 0.0f, 2.0f);
 
 	if (!bHit) return false;
 

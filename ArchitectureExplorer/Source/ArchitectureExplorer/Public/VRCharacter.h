@@ -36,7 +36,8 @@ private:
 	void StartFade(float FromAlpha, float ToAlpha);
 	void BeginTeleport();
 	void EndTeleport();
-	bool FindTeleportDestination(FVector& OutLocation) const;
+	bool FindTeleportDestinationController(FVector& OutLocation) const;
+	bool FindTeleportDestinationHMD(FVector& OutLocation) const;
 	void UpdateDestinationMarker();
 	void CreateBlinkerMaterialInstance();
 	void UpdateBlinkers();
@@ -52,19 +53,25 @@ private:
 	USceneComponent* VRRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* DestinationMarker;
+	UStaticMeshComponent* DestinationMarker = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	UPostProcessComponent* PostProcessComponent;
+	UPostProcessComponent* PostProcessComponent = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	UMaterialInterface* BlinkerMaterialBase;
+	UMaterialInterface* BlinkerMaterialBase = nullptr;
 
 	UPROPERTY()
-	UMaterialInstanceDynamic* BlinkerMaterialInstance;
+	UMaterialInstanceDynamic* BlinkerMaterialInstance = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	UCurveFloat* BlinkerRadiusVsVelocity;
+	UCurveFloat* BlinkerRadiusVsVelocity = nullptr;
+
+	UPROPERTY()
+	class UMotionControllerComponent* LeftMotionController = nullptr;
+
+	UPROPERTY()
+	class UMotionControllerComponent* RightMotionController = nullptr;
 
 
 
@@ -75,5 +82,5 @@ private:
 	float TeleportFadeDuration = 1.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 20.f);
+	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 50.f);
 };
