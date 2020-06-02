@@ -36,7 +36,7 @@ private:
 	void StartFade(float FromAlpha, float ToAlpha);
 	void BeginTeleport();
 	void EndTeleport();
-	bool FindTeleportDestinationController(FVector& OutLocation) const;
+	bool FindTeleportDestination(FVector& OutLocation) const;
 	bool FindTeleportDestinationHMD(FVector& OutLocation) const;
 	void UpdateDestinationMarker();
 	void CreateBlinkerMaterialInstance();
@@ -83,4 +83,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 50.f);
+
+	UPROPERTY(EditDefaultsOnly)
+	float TeleportParabolaVelocity = 1000.f;
 };

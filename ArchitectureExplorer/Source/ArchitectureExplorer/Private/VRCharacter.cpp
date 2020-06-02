@@ -10,6 +10,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "MotionControllerComponent.h"
 #include "NavigationSystem.h"
@@ -61,6 +62,17 @@ void AVRCharacter::Tick(float DeltaTime)
 	SyncActorToPlayspaceMovement();
 	UpdateDestinationMarker();
 	UpdateBlinkers();
+}
+
+// Called to bind functionality to input
+void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
+
+	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Released, this, &AVRCharacter::BeginTeleport);
 }
 
 void AVRCharacter::CreateBlinkerMaterialInstance()
@@ -124,7 +136,7 @@ void AVRCharacter::UpdateDestinationMarker()
 	if (!DestinationMarker) return;
 
 	FVector Location;
-	bool bHasDestination = FindTeleportDestinationController(Location);
+	bool bHasDestination = FindTeleportDestination(Location);
 
 	if (bHasDestination)
 	{
@@ -137,27 +149,37 @@ void AVRCharacter::UpdateDestinationMarker()
 	}
 }
 
-bool AVRCharacter::FindTeleportDestinationController(FVector& OutLocation) const
+bool AVRCharacter::FindTeleportDestination(FVector& OutLocation) const
 {
-	if (!DestinationMarker || !RightMotionController) return false;
+	if (!DestinationMarker || !RightMotionController || !RightMotionController->IsTracked()) return false;
 
-	FHitResult HitResult;
-
+	
 	FVector LookVector = RightMotionController->GetForwardVector();
-	LookVector = LookVector.RotateAngleAxis(30.f, RightMotionController->GetRightVector());
+	//LookVector = LookVector.RotateAngleAxis(30.f, RightMotionController->GetRightVector());
 
 	FVector Start = RightMotionController->GetComponentLocation() + LookVector * 10.f;  // Start line trace in front of motion controller
 	FVector End = Start + LookVector * MaxTeleportDistance;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+	//FHitResult HitResult;
+	//bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
 	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f, 0.0f, 2.0f);
+
+	float ProjectileRadius = 2.f;
+	FVector LaunchVector = RightMotionController->GetForwardVector() * TeleportParabolaVelocity;
+	int32 MaxSimTime = 10.f;
+	FPredictProjectilePathParams ProjectileParams(ProjectileRadius, Start, LaunchVector, MaxSimTime, ECollisionChannel::ECC_Visibility);
+	ProjectileParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+
+	FPredictProjectilePathResult ProjectileResult;
+
+	bool bHit = UGameplayStatics::PredictProjectilePath(this, ProjectileParams, ProjectileResult);
 
 	if (!bHit) return false;
 
 	FNavLocation NavLocation;
 
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
-	bool bOnNavMesh = NavSystem->ProjectPointToNavigation(HitResult.Location, NavLocation, TeleportProjectionExtent);
+	bool bOnNavMesh = NavSystem->ProjectPointToNavigation(ProjectileResult.HitResult.Location, NavLocation, TeleportProjectionExtent);
 
 	if (!bOnNavMesh) return false;
 
@@ -187,17 +209,6 @@ bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
 	OutLocation = NavLocation.Location;
 
 	return true;
-}
-
-// Called to bind functionality to input
-void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
-	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
-
-	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
 }
 
 void AVRCharacter::MoveForward(float AxisValue)
