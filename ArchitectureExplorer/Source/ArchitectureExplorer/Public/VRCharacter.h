@@ -6,9 +6,6 @@
 #include "GameFramework/Character.h"
 #include "VRCharacter.generated.h"
 
-class UCameraComponent;
-class UPostProcessComponent;
-
 UCLASS()
 class ARCHITECTUREEXPLORER_API AVRCharacter : public ACharacter
 {
@@ -36,27 +33,37 @@ private:
 	void StartFade(float FromAlpha, float ToAlpha);
 	void BeginTeleport();
 	void EndTeleport();
-	bool FindTeleportDestination(FVector& OutLocation) const;
+	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
 	bool FindTeleportDestinationHMD(FVector& OutLocation) const;
+	void DrawTeleportArc(const TArray<FVector>& Path);
+	void UpdateTeleportPath(const TArray<FVector>& Path);
 	void UpdateDestinationMarker();
 	void CreateBlinkerMaterialInstance();
 	void UpdateBlinkers();
-
 	// Get blinker center from movement direction
 	FVector2D GetBlinkerCenter();
 
 
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* Camera = nullptr;
+	class UCameraComponent* Camera = nullptr;
+
+	UPROPERTY()
+	class UMotionControllerComponent* LeftMotionController = nullptr;
+
+	UPROPERTY()
+	class UMotionControllerComponent* RightMotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* VRRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
+	class USplineComponent* TeleportPath = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DestinationMarker = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	UPostProcessComponent* PostProcessComponent = nullptr;
+	class UPostProcessComponent* PostProcessComponent = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* BlinkerMaterialBase = nullptr;
@@ -68,15 +75,9 @@ private:
 	UCurveFloat* BlinkerRadiusVsVelocity = nullptr;
 
 	UPROPERTY()
-	class UMotionControllerComponent* LeftMotionController = nullptr;
+	TArray<class USplineMeshComponent*> TeleportArcMeshPool;
 
-	UPROPERTY()
-	class UMotionControllerComponent* RightMotionController = nullptr;
-
-
-
-	UPROPERTY(EditDefaultsOnly)
-	float MaxTeleportDistance = 1000.f;
+private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float TeleportFadeDuration = 1.f;
@@ -85,5 +86,17 @@ private:
 	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 50.f);
 
 	UPROPERTY(EditDefaultsOnly)
-	float TeleportParabolaVelocity = 1000.f;
+	float TeleportProjectileRadius = 5.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TeleportProjectileSpeed = 800.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TeleportSimulationTime = 1.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMesh* TeleportArcMesh = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	UMaterialInterface* TeleportArcMaterial = nullptr;
 };
