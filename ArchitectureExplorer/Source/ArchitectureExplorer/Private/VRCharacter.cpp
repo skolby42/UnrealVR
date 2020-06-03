@@ -113,14 +113,19 @@ void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 {
 	UpdateTeleportPath(Path);
 
-	for (int32 i = 0; i < Path.Num(); i++)
+	for (USplineMeshComponent* SplineMesh: TeleportArcMeshPool)
+	{
+		SplineMesh->SetVisibility(false);
+	}
+
+	for (int32 i = 0; i < Path.Num() - 1; i++)
 	{
 		USplineMeshComponent* SplineMesh = nullptr;
 		if (TeleportArcMeshPool.Num() <= i)
 		{
 			SplineMesh = NewObject<USplineMeshComponent>(this);
 			SplineMesh->SetMobility(EComponentMobility::Movable);
-			SplineMesh->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+			SplineMesh->AttachToComponent(TeleportPath, FAttachmentTransformRules::KeepRelativeTransform);
 			
 			if (TeleportArcMesh)
 				SplineMesh->SetStaticMesh(TeleportArcMesh);
@@ -134,7 +139,13 @@ void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 		}
 
 		SplineMesh = TeleportArcMeshPool[i];
-		SplineMesh->SetWorldLocation(Path[i]);
+
+		FVector StartLocation, StartTangent, EndLocation, EndTangent;
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent);
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent);
+
+		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+		SplineMesh->SetVisibility(true);
 	}
 }
 
@@ -194,16 +205,16 @@ void AVRCharacter::UpdateDestinationMarker()
 
 	if (bHasDestination)
 	{
-		DrawTeleportArc(Path);
 		DestinationMarker->SetVisibility(true);
 		DestinationMarker->SetWorldLocation(Location);
 	}
 	else
 	{
-		if (TeleportPath->GetSplineLength() > 0)
-			TeleportPath->ClearSplinePoints();
+		Path.Empty();
 		DestinationMarker->SetVisibility(false);
 	}
+
+	DrawTeleportArc(Path);
 }
 
 bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const
@@ -306,10 +317,9 @@ void AVRCharacter::BeginTeleport()
 
 void AVRCharacter::EndTeleport()
 {
-	auto CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	FVector NewLocation = DestinationMarker->GetComponentLocation();
-	NewLocation.Z += CapsuleHalfHeight;
-	SetActorLocation(NewLocation);
+	FVector Destination = DestinationMarker->GetComponentLocation();
+	Destination += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
+	SetActorLocation(Destination);
 
 	StartFade(1.0f, 0.f);
 }
