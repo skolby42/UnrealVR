@@ -11,6 +11,7 @@
 #include "Components/SplineMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
+#include "HandController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "MotionControllerComponent.h"
@@ -37,16 +38,8 @@ AVRCharacter::AVRCharacter()
 	PostProcessComponent = CreateDefaultSubobject <UPostProcessComponent>(TEXT("Post Process Component"));
 	PostProcessComponent->SetupAttachment(GetRootComponent());
 
-	LeftMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("Left Motion Controller"));
-	LeftMotionController->SetupAttachment(VRRoot);
-	LeftMotionController->SetTrackingSource(EControllerHand::Left);
-
-	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("Right Motion Controller"));
-	RightMotionController->SetupAttachment(VRRoot);
-	RightMotionController->SetTrackingSource(EControllerHand::Right);
-
 	TeleportPath = CreateDefaultSubobject<USplineComponent>(TEXT("TeleportPath"));
-	TeleportPath->SetupAttachment(RightMotionController);
+	TeleportPath->SetupAttachment(VRRoot);
 }
 
 // Called when the game starts or when spawned
@@ -56,14 +49,28 @@ void AVRCharacter::BeginPlay()
 
 	DestinationMarker->SetVisibility(false);
 	CreateBlinkerMaterialInstance();
+	CreateHandControllers();
+}
 
-	//DynamicMesh = NewObject<UStaticMeshComponent>(this);
-	//DynamicMesh->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
-	//if (TeleportArcMesh)
-	//	DynamicMesh->SetStaticMesh(TeleportArcMesh);
-	//if (TeleportArcMaterial)
-	//	DynamicMesh->SetMaterial(0, TeleportArcMaterial);
-	//DynamicMesh->RegisterComponent();  // Important for dynamic components
+void AVRCharacter::CreateHandControllers()
+{
+	if (!ensure(HandControllerClass)) return;
+
+	LeftController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	if (LeftController)
+	{
+		LeftController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		LeftController->SetHand(EControllerHand::Left);
+		LeftController->SetOwner(this);  // Fix for 4.22+
+	}
+
+	RightController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	if (RightController)
+	{
+		RightController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		RightController->SetHand(EControllerHand::Right);
+		RightController->SetOwner(this);  // Fix for 4.22+
+	}
 }
 
 // Called every frame
@@ -111,6 +118,8 @@ void AVRCharacter::UpdateBlinkers()
 
 void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 {
+	if (!ensure(TeleportPath)) return;
+
 	UpdateTeleportPath(Path);
 
 	for (USplineMeshComponent* SplineMesh: TeleportArcMeshPool)
@@ -145,12 +154,15 @@ void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent);
 
 		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+		
 		SplineMesh->SetVisibility(true);
 	}
 }
 
 void AVRCharacter::UpdateTeleportPath(const TArray<FVector>& Path)
 {
+	if (!ensure(TeleportPath)) return;
+
 	TeleportPath->ClearSplinePoints(false);
 	for (int32 i = 0; i < Path.Num(); i++)
 	{
@@ -219,11 +231,11 @@ void AVRCharacter::UpdateDestinationMarker()
 
 bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const
 {
-	if (!DestinationMarker || !RightMotionController || !RightMotionController->IsTracked()) return false;
+	if (!DestinationMarker || !RightController) return false;
 		
-	FVector LookVector = RightMotionController->GetForwardVector();
-	FVector Start = RightMotionController->GetComponentLocation() + LookVector * 20.f;  // Start line trace in front of motion controller
-	FVector LaunchVector = RightMotionController->GetForwardVector() * TeleportProjectileSpeed;
+	FVector LookVector = RightController->GetActorForwardVector();
+	FVector Start = RightController->GetActorLocation() + LookVector * 3.f;  // Start line trace in front of motion controller
+	FVector LaunchVector = LookVector * TeleportProjectileSpeed;
 
 	FPredictProjectilePathParams ProjectileParams(
 		TeleportProjectileRadius, 

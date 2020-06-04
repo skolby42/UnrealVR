@@ -6,6 +6,12 @@
 #include "GameFramework/Character.h"
 #include "VRCharacter.generated.h"
 
+class AHandController;
+class UCameraComponent;
+class UPostProcessComponent;
+class USplineComponent;
+class USplineMeshComponent;
+
 UCLASS()
 class ARCHITECTUREEXPLORER_API AVRCharacter : public ACharacter
 {
@@ -18,6 +24,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void CreateHandControllers();
 
 public:	
 	// Called every frame
@@ -43,42 +51,37 @@ private:
 	// Get blinker center from movement direction
 	FVector2D GetBlinkerCenter();
 
+private:
 
 	UPROPERTY(VisibleAnywhere)
-	class UCameraComponent* Camera = nullptr;
+	UCameraComponent* Camera = nullptr;
 
 	UPROPERTY()
-	class UMotionControllerComponent* LeftMotionController = nullptr;
+	AHandController* LeftController = nullptr;
 
 	UPROPERTY()
-	class UMotionControllerComponent* RightMotionController = nullptr;
+	AHandController* RightController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* VRRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class USplineComponent* TeleportPath = nullptr;
+	USplineComponent* TeleportPath = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DestinationMarker = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class UPostProcessComponent* PostProcessComponent = nullptr;
-
-	UPROPERTY(EditAnywhere)
-	UMaterialInterface* BlinkerMaterialBase = nullptr;
+	UPostProcessComponent* PostProcessComponent = nullptr;
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* BlinkerMaterialInstance = nullptr;
 
-	UPROPERTY(EditAnywhere)
-	UCurveFloat* BlinkerRadiusVsVelocity = nullptr;
-
 	UPROPERTY()
-	TArray<class USplineMeshComponent*> TeleportArcMeshPool;
+	TArray<USplineMeshComponent*> TeleportArcMeshPool;
 
 private:
-
+	// Configuration properties
 	UPROPERTY(EditDefaultsOnly)
 	float TeleportFadeDuration = 1.f;
 
@@ -95,8 +98,17 @@ private:
 	float TeleportSimulationTime = 1.f;
 
 	UPROPERTY(EditDefaultsOnly)
+	UMaterialInterface* BlinkerMaterialBase = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* BlinkerRadiusVsVelocity = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
 	UStaticMesh* TeleportArcMesh = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	UMaterialInterface* TeleportArcMaterial = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AHandController> HandControllerClass = nullptr;
 };
