@@ -52,27 +52,6 @@ void AVRCharacter::BeginPlay()
 	CreateHandControllers();
 }
 
-void AVRCharacter::CreateHandControllers()
-{
-	if (!ensure(HandControllerClass)) return;
-
-	LeftController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
-	if (LeftController)
-	{
-		LeftController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
-		LeftController->SetHand(EControllerHand::Left);
-		LeftController->SetOwner(this);  // Fix for 4.22+
-	}
-
-	RightController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
-	if (RightController)
-	{
-		RightController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
-		RightController->SetHand(EControllerHand::Right);
-		RightController->SetOwner(this);  // Fix for 4.22+
-	}
-}
-
 // Called every frame
 void AVRCharacter::Tick(float DeltaTime)
 {
@@ -92,6 +71,27 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
 
 	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
+}
+
+void AVRCharacter::CreateHandControllers()
+{
+	if (!ensure(HandControllerClass)) return;
+
+	LeftController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	if (LeftController)
+	{
+		LeftController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		LeftController->SetHand(EControllerHand::Left);
+		LeftController->SetOwner(this);  // Fix for 4.22+
+	}
+
+	RightController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	if (RightController)
+	{
+		RightController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		RightController->SetHand(EControllerHand::Right);
+		RightController->SetOwner(this);  // Fix for 4.22+
+	}
 }
 
 void AVRCharacter::CreateBlinkerMaterialInstance()
@@ -114,63 +114,6 @@ void AVRCharacter::UpdateBlinkers()
 
 	FVector2D Center = GetBlinkerCenter();
 	BlinkerMaterialInstance->SetVectorParameterValue(TEXT("Center"), FLinearColor(Center.X, Center.Y, 0.f));
-}
-
-void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
-{
-	if (!ensure(TeleportPath)) return;
-
-	UpdateTeleportPath(Path);
-
-	for (USplineMeshComponent* SplineMesh: TeleportArcMeshPool)
-	{
-		SplineMesh->SetVisibility(false);
-	}
-
-	for (int32 i = 0; i < Path.Num() - 1; i++)
-	{
-		USplineMeshComponent* SplineMesh = nullptr;
-		if (TeleportArcMeshPool.Num() <= i)
-		{
-			SplineMesh = NewObject<USplineMeshComponent>(this);
-			SplineMesh->SetMobility(EComponentMobility::Movable);
-			SplineMesh->AttachToComponent(TeleportPath, FAttachmentTransformRules::KeepRelativeTransform);
-			
-			if (TeleportArcMesh)
-				SplineMesh->SetStaticMesh(TeleportArcMesh);
-
-			if (TeleportArcMaterial)
-				SplineMesh->SetMaterial(0, TeleportArcMaterial);
-				
-			SplineMesh->RegisterComponent();  // Important for dynamic components
-
-			TeleportArcMeshPool.Add(SplineMesh);
-		}
-
-		SplineMesh = TeleportArcMeshPool[i];
-
-		FVector StartLocation, StartTangent, EndLocation, EndTangent;
-		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent);
-		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent);
-
-		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
-		
-		SplineMesh->SetVisibility(true);
-	}
-}
-
-void AVRCharacter::UpdateTeleportPath(const TArray<FVector>& Path)
-{
-	if (!ensure(TeleportPath)) return;
-
-	TeleportPath->ClearSplinePoints(false);
-	for (int32 i = 0; i < Path.Num(); i++)
-	{
-		FVector LocalPosition = TeleportPath->GetComponentTransform().InverseTransformPosition(Path[i]);  // Convert to local coordinates
-		FSplinePoint SplinePoint = FSplinePoint(i, LocalPosition, ESplinePointType::Curve);
-		TeleportPath->AddPoint(SplinePoint, false);
-	}
-	TeleportPath->UpdateSpline();
 }
 
 FVector2D AVRCharacter::GetBlinkerCenter()
@@ -205,7 +148,6 @@ void AVRCharacter::SyncActorToPlayspaceMovement()
 	AddActorWorldOffset(NewCameraOffset);
 	VRRoot->AddWorldOffset(-NewCameraOffset);
 }
-
 
 void AVRCharacter::UpdateDestinationMarker()
 {
@@ -291,6 +233,63 @@ bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
 	OutLocation = NavLocation.Location;
 
 	return true;
+}
+
+void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
+{
+	if (!ensure(TeleportPath)) return;
+
+	UpdateTeleportPath(Path);
+
+	for (USplineMeshComponent* SplineMesh : TeleportArcMeshPool)
+	{
+		SplineMesh->SetVisibility(false);
+	}
+
+	for (int32 i = 0; i < Path.Num() - 1; i++)
+	{
+		USplineMeshComponent* SplineMesh = nullptr;
+		if (TeleportArcMeshPool.Num() <= i)
+		{
+			SplineMesh = NewObject<USplineMeshComponent>(this);
+			SplineMesh->SetMobility(EComponentMobility::Movable);
+			SplineMesh->AttachToComponent(TeleportPath, FAttachmentTransformRules::KeepRelativeTransform);
+
+			if (TeleportArcMesh)
+				SplineMesh->SetStaticMesh(TeleportArcMesh);
+
+			if (TeleportArcMaterial)
+				SplineMesh->SetMaterial(0, TeleportArcMaterial);
+
+			SplineMesh->RegisterComponent();  // Important for dynamic components
+
+			TeleportArcMeshPool.Add(SplineMesh);
+		}
+
+		SplineMesh = TeleportArcMeshPool[i];
+
+		FVector StartLocation, StartTangent, EndLocation, EndTangent;
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent);
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent);
+
+		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+
+		SplineMesh->SetVisibility(true);
+	}
+}
+
+void AVRCharacter::UpdateTeleportPath(const TArray<FVector>& Path)
+{
+	if (!ensure(TeleportPath)) return;
+
+	TeleportPath->ClearSplinePoints(false);
+	for (int32 i = 0; i < Path.Num(); i++)
+	{
+		FVector LocalPosition = TeleportPath->GetComponentTransform().InverseTransformPosition(Path[i]);  // Convert to local coordinates
+		FSplinePoint SplinePoint = FSplinePoint(i, LocalPosition, ESplinePointType::Curve);
+		TeleportPath->AddPoint(SplinePoint, false);
+	}
+	TeleportPath->UpdateSpline();
 }
 
 void AVRCharacter::MoveForward(float AxisValue)
