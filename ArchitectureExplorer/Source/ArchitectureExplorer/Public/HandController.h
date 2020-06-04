@@ -36,10 +36,23 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	// Callbacks
+	UFUNCTION()
+	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	UFUNCTION()
+	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
 	// Default sub object
 	UPROPERTY(VisibleAnywhere)
 	UMotionControllerComponent* MotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ControllerMesh = nullptr;
+
+	// Helpers
+	bool CanClimb() const;
+
+	//State
+	bool bCanClimb = false;
 };

@@ -75,7 +75,7 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AVRCharacter::CreateHandControllers()
 {
-	if (!ensure(HandControllerClass)) return;
+	if (!HandControllerClass) return;
 
 	LeftController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
 	if (LeftController)
@@ -237,7 +237,7 @@ bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
 
 void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 {
-	if (!ensure(TeleportPath)) return;
+	if (!TeleportPath) return;
 
 	UpdateTeleportPath(Path);
 
@@ -280,7 +280,7 @@ void AVRCharacter::DrawTeleportArc(const TArray<FVector>& Path)
 
 void AVRCharacter::UpdateTeleportPath(const TArray<FVector>& Path)
 {
-	if (!ensure(TeleportPath)) return;
+	if (!TeleportPath) return;
 
 	TeleportPath->ClearSplinePoints(false);
 	for (int32 i = 0; i < Path.Num(); i++)
