@@ -2,8 +2,11 @@
 
 
 #include "HandController.h"
-#include "MotionControllerComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Haptics/HapticFeedbackEffect_Curve.h"
+#include "MotionControllerComponent.h"
+
 
 // Sets default values
 AHandController::AHandController()
@@ -51,7 +54,7 @@ void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 	if (!bCanClimb && CanClimb())
 	{
 		bCanClimb = true;
-		UE_LOG(LogTemp, Warning, TEXT("Can climb!"));
+		ControllerRumble();
 	}
 }
 
@@ -71,4 +74,17 @@ bool AHandController::CanClimb() const
 	}
 
 	return false;
+}
+
+void AHandController::ControllerRumble() const
+{
+	if (!HandHoldRumble) return;
+
+	APawn* Pawn = Cast<APawn>(GetAttachParentActor());
+	if (!Pawn) return;
+
+	APlayerController* PlayerController = Pawn->GetController<APlayerController>();
+	if (!PlayerController) return;
+
+	PlayerController->PlayHapticEffect(HandHoldRumble, MotionController->GetTrackingSource());
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "HandController.generated.h"
 
+class UHapticFeedbackEffect_Curve;
 class UMotionControllerComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHandControllerDelegate);
@@ -50,8 +51,13 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ControllerMesh = nullptr;
 
+	UPROPERTY(EditDefaultsOnly)
+	UHapticFeedbackEffect_Curve* HandHoldRumble = nullptr;
+
 	// Helpers
 	bool CanClimb() const;
+
+	void ControllerRumble() const;
 
 	//State
 	bool bCanClimb = false;
