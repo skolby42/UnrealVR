@@ -36,11 +36,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void Grip();
+	void Release();
+
 private:
 	// Callbacks
 	UFUNCTION()
 	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
-
 	UFUNCTION()
 	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
@@ -56,9 +58,11 @@ private:
 
 	// Helpers
 	bool CanClimb() const;
-
 	void ControllerRumble() const;
+	void Climb();
 
 	//State
 	bool bCanClimb = false;
+	bool bIsClimbing = false;
+	FVector ClimbingStartLocation;
 };

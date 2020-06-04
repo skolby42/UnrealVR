@@ -40,6 +40,7 @@ void AHandController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	Climb();
 }
 
 void AHandController::SetHand(EControllerHand ControllerHand)
@@ -87,4 +88,30 @@ void AHandController::ControllerRumble() const
 	if (!PlayerController) return;
 
 	PlayerController->PlayHapticEffect(HandHoldRumble, MotionController->GetTrackingSource());
+}
+
+void AHandController::Grip()
+{
+	if (bCanClimb && !bIsClimbing)
+	{
+		bIsClimbing = true;
+		ClimbingStartLocation = GetActorLocation();
+	}
+}
+
+void AHandController::Release()
+{
+	bIsClimbing = false;
+}
+
+void AHandController::Climb()
+{
+	if (!bIsClimbing) return;
+
+	AActor* Parent = GetAttachParentActor();
+	if (!Parent) return;
+	
+	FVector ControllerDelta = GetActorLocation() - ClimbingStartLocation;
+	AddActorWorldOffset(ControllerDelta);
+	Parent->AddActorWorldOffset(-ControllerDelta);
 }

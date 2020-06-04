@@ -71,6 +71,10 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
 
 	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
+	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripLeft);
+	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseLeft);
+	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripRight);
+	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseRight);
 }
 
 void AVRCharacter::CreateHandControllers()
@@ -122,7 +126,7 @@ FVector2D AVRCharacter::GetBlinkerCenter()
 	if (!PlayerController) return FVector2D(0.5f);
 
 	FVector MovementDirection = GetVelocity().GetSafeNormal();
-	if (MovementDirection.IsNearlyZero()) 
+	if (MovementDirection.IsNearlyZero() || !bBlinkersUseMovementDirection) 
 		return FVector2D(0.5f);
 	
 	FVector WorldStationaryLocation;
@@ -333,4 +337,28 @@ void AVRCharacter::EndTeleport()
 	SetActorLocation(Destination);
 
 	StartFade(1.0f, 0.f);
+}
+
+void AVRCharacter::GripLeft()
+{
+	if (!LeftController) return;
+	LeftController->Grip();
+}
+
+void AVRCharacter::ReleaseLeft()
+{
+	if (!LeftController) return;
+	LeftController->Release();
+}
+
+void AVRCharacter::GripRight()
+{
+	if (!RightController) return;
+	RightController->Grip();
+}
+
+void AVRCharacter::ReleaseRight()
+{
+	if (!RightController) return;
+	RightController->Release();
 }

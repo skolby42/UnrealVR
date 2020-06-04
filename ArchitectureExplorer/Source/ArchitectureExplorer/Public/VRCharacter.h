@@ -48,8 +48,13 @@ private:
 	void UpdateDestinationMarker();
 	void CreateBlinkerMaterialInstance();
 	void UpdateBlinkers();
-	// Get blinker center from movement direction
 	FVector2D GetBlinkerCenter();
+
+	// Pass through methods
+	void GripLeft();
+	void ReleaseLeft();
+	void GripRight();
+	void ReleaseRight();
 
 private:
 
@@ -81,6 +86,9 @@ private:
 	TArray<USplineMeshComponent*> TeleportArcMeshPool;
 
 private:
+	UPROPERTY(EditDefaultsOnly)
+	bool bBlinkersUseMovementDirection = false;
+
 	// Configuration properties
 	UPROPERTY(EditDefaultsOnly)
 	float TeleportFadeDuration = 1.f;
