@@ -37,8 +37,12 @@ public:
 private:
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
+	void TurnRight(float AxisValue);
+	void SnapTurnRight();
+	void SnapTurnLeft();
+	void SnapTurn(float Rotation);
 	void SyncActorToPlayspaceMovement();
-	void StartFade(float FromAlpha, float ToAlpha);
+	void StartFade(float FromAlpha, float ToAlpha, float FadeDuration);
 	void BeginTeleport();
 	void EndTeleport();
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
@@ -86,37 +90,50 @@ private:
 	TArray<USplineMeshComponent*> TeleportArcMeshPool;
 
 private:
-	UPROPERTY(EditDefaultsOnly)
-	bool bBlinkersUseMovementDirection = false;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Turning")
+	float TurnDegreesPerSecond = 30.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Turning")
+	bool bDoSnapTurn = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Turning")
+	float SnapTurnFadeDuration = 0.25f;
 
 	// Configuration properties
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportFadeDuration = 1.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 50.f);
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportProjectileRadius = 5.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportProjectileSpeed = 800.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportSimulationTime = 1.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
+	UStaticMesh* TeleportArcMesh = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
+	UMaterialInterface* TeleportArcMaterial = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Blinkers")
+	bool bBlinkersUseMovementDirection = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Blinkers")
 	UMaterialInterface* BlinkerMaterialBase = nullptr;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Blinkers")
 	UCurveFloat* BlinkerRadiusVsVelocity = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
-	UStaticMesh* TeleportArcMesh = nullptr;
-
-	UPROPERTY(EditDefaultsOnly)
-	UMaterialInterface* TeleportArcMaterial = nullptr;
-
-	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AHandController> HandControllerClass = nullptr;
+
+	// State properties
+	float BlinkerSpeedOverride = 0.f;
 };

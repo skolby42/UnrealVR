@@ -26,16 +26,17 @@ AVRCharacter::AVRCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	VRRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VR Root"));
+	VRRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VRRoot"));
 	VRRoot->SetupAttachment(GetRootComponent());
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(VRRoot);
 
-	DestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Destination Marker"));
+	DestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DestinationMarker"));
+	DestinationMarker->SetCollisionProfileName(TEXT("NoCollision"));
 	DestinationMarker->SetupAttachment(GetRootComponent());
 
-	PostProcessComponent = CreateDefaultSubobject <UPostProcessComponent>(TEXT("Post Process Component"));
+	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComponent"));
 	PostProcessComponent->SetupAttachment(GetRootComponent());
 
 	TeleportPath = CreateDefaultSubobject<USplineComponent>(TEXT("TeleportPath"));
@@ -47,7 +48,8 @@ void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	DestinationMarker->SetVisibility(false);
+	if (ensure(DestinationMarker))
+		DestinationMarker->SetVisibility(false);
 	CreateBlinkerMaterialInstance();
 	CreateHandControllers();
 }
@@ -69,12 +71,23 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
+	
 
 	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
 	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripLeft);
 	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseLeft);
 	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripRight);
 	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseRight);
+
+	if (bDoSnapTurn)
+	{
+		PlayerInputComponent->BindAction(TEXT("SnapTurnLeft"), EInputEvent::IE_Released, this, &AVRCharacter::SnapTurnLeft);
+		PlayerInputComponent->BindAction(TEXT("SnapTurnRight"), EInputEvent::IE_Released, this, &AVRCharacter::SnapTurnRight);
+	}
+	else
+	{
+		PlayerInputComponent->BindAxis(TEXT("TurnRight"), this, &AVRCharacter::TurnRight);
+	}
 }
 
 void AVRCharacter::CreateHandControllers()
@@ -96,11 +109,13 @@ void AVRCharacter::CreateHandControllers()
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
+
+	LeftController->PairController(RightController);
 }
 
 void AVRCharacter::CreateBlinkerMaterialInstance()
 {
-	if (!BlinkerMaterialBase) return;
+	if (!BlinkerMaterialBase || !PostProcessComponent) return;
 
 	BlinkerMaterialInstance = UMaterialInstanceDynamic::Create(BlinkerMaterialBase, this);
 	if (!BlinkerMaterialInstance) return;
@@ -112,7 +127,7 @@ void AVRCharacter::UpdateBlinkers()
 {
 	if (!BlinkerRadiusVsVelocity || !BlinkerMaterialInstance) return;
 
-	float Speed = GetVelocity().Size();
+	float Speed = BlinkerSpeedOverride > 0 ? BlinkerSpeedOverride : GetVelocity().Size();
 	float Radius = BlinkerRadiusVsVelocity->GetFloatValue(Speed);
 	BlinkerMaterialInstance->SetScalarParameterValue(TEXT("Radius"), Radius);
 
@@ -310,7 +325,53 @@ void AVRCharacter::MoveRight(float AxisValue)
 	AddMovementInput(Camera->GetRightVector() * MoveValue);
 }
 
-void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
+void AVRCharacter::TurnRight(float AxisValue)
+{
+	float MoveValue = FMath::Clamp<float>(AxisValue, -1, 1);
+	if (MoveValue == 0.f)
+	{
+		BlinkerSpeedOverride = 0.f;
+		return;
+	}
+
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	MoveValue *= DeltaTime * TurnDegreesPerSecond;
+
+	AddControllerYawInput(MoveValue);
+
+	if (BlinkerRadiusVsVelocity)
+	{
+		float MinTime, MaxTime;
+		BlinkerRadiusVsVelocity->GetTimeRange(MinTime, MaxTime);
+		BlinkerSpeedOverride = MaxTime * FMath::Abs(MoveValue);
+	}
+}
+
+void AVRCharacter::SnapTurnRight()
+{
+	StartFade(0.f, 1.f, SnapTurnFadeDuration);
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, TurnDegreesPerSecond), SnapTurnFadeDuration, false);
+	
+}
+
+void AVRCharacter::SnapTurnLeft()
+{
+	StartFade(0.f, 1.f, SnapTurnFadeDuration);
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, -TurnDegreesPerSecond), SnapTurnFadeDuration, false);
+}
+
+void AVRCharacter::SnapTurn(float Rotation)
+{
+	auto PlayerController = Cast<APlayerController>(GetController());
+	if (!PlayerController) return;
+
+	PlayerController->AddYawInput(Rotation / PlayerController->InputYawScale);
+	StartFade(1.f, 0.f, SnapTurnFadeDuration);
+}
+
+void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 {
 	auto PlayerController = Cast<APlayerController>(GetController());
 	if (!PlayerController) return;
@@ -318,13 +379,13 @@ void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
 	auto PlayerCameraManager = PlayerController->PlayerCameraManager;
 	if (PlayerCameraManager)
 	{
-		PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, TeleportFadeDuration, FLinearColor::Black);
+		PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, FadeDuration, FLinearColor::Black);
 	}
 }
 
 void AVRCharacter::BeginTeleport()
 {
-	StartFade(0.f, 1.f);
+	StartFade(0.f, 1.f, TeleportFadeDuration);
 
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &AVRCharacter::EndTeleport, TeleportFadeDuration);
@@ -336,7 +397,7 @@ void AVRCharacter::EndTeleport()
 	Destination += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
 	SetActorLocation(Destination);
 
-	StartFade(1.0f, 0.f);
+	StartFade(1.0f, 0.f, TeleportFadeDuration);
 }
 
 void AVRCharacter::GripLeft()

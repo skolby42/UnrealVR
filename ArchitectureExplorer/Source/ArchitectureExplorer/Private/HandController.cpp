@@ -3,6 +3,8 @@
 
 #include "HandController.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Haptics/HapticFeedbackEffect_Curve.h"
 #include "MotionControllerComponent.h"
@@ -48,6 +50,12 @@ void AHandController::SetHand(EControllerHand ControllerHand)
 	if (!MotionController) return;
 	MotionController->SetTrackingSource(ControllerHand);
 	UpdateControllerMesh(ControllerHand);
+}
+
+void AHandController::PairController(AHandController* OtherController)
+{
+	PairedController = OtherController;
+	OtherController->PairedController = this;
 }
 
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -96,12 +104,30 @@ void AHandController::Grip()
 	{
 		bIsClimbing = true;
 		ClimbingStartLocation = GetActorLocation();
+
+		if (PairedController && PairedController->bIsClimbing)
+			PairedController->Release();
+
+		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
+		if (Character)
+		{
+			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		}
 	}
 }
 
 void AHandController::Release()
 {
-	bIsClimbing = false;
+	if (bIsClimbing)
+	{
+		bIsClimbing = false;
+
+		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
+		if (Character)
+		{
+			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
+		}
+	}
 }
 
 void AHandController::Climb()

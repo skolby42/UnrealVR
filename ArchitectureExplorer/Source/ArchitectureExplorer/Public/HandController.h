@@ -21,6 +21,7 @@ public:
 	AHandController();
 
 	void SetHand(EControllerHand Hand);
+	void PairController(AHandController* OtherController);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
@@ -65,4 +66,5 @@ private:
 	bool bCanClimb = false;
 	bool bIsClimbing = false;
 	FVector ClimbingStartLocation;
+	AHandController* PairedController;
 };
