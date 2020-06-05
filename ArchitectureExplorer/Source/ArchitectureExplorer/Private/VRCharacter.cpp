@@ -72,8 +72,8 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
 	
-
-	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::BeginTeleport);
+	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::ActivateTeleport);
+	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Released, this, &AVRCharacter::BeginTeleport);
 	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripLeft);
 	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseLeft);
 	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripRight);
@@ -174,6 +174,14 @@ void AVRCharacter::UpdateDestinationMarker()
 
 	TArray<FVector> Path;
 	FVector Location;
+
+	if (!bIsTeleportActive)
+	{
+		DestinationMarker->SetVisibility(false);
+		DrawTeleportArc(Path);
+		return;
+	}
+
 	bool bHasDestination = FindTeleportDestination(Path, Location);
 
 	if (bHasDestination)
@@ -349,6 +357,8 @@ void AVRCharacter::TurnRight(float AxisValue)
 
 void AVRCharacter::SnapTurnRight()
 {
+	if (bIsTeleportActive) return;
+
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, TurnDegreesPerSecond), SnapTurnFadeDuration, false);
@@ -357,6 +367,8 @@ void AVRCharacter::SnapTurnRight()
 
 void AVRCharacter::SnapTurnLeft()
 {
+	if (bIsTeleportActive) return;
+
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, -TurnDegreesPerSecond), SnapTurnFadeDuration, false);
@@ -383,6 +395,11 @@ void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 	}
 }
 
+void AVRCharacter::ActivateTeleport()
+{
+	bIsTeleportActive = true;
+}
+
 void AVRCharacter::BeginTeleport()
 {
 	StartFade(0.f, 1.f, TeleportFadeDuration);
@@ -398,6 +415,8 @@ void AVRCharacter::EndTeleport()
 	SetActorLocation(Destination);
 
 	StartFade(1.0f, 0.f, TeleportFadeDuration);
+
+	bIsTeleportActive = false;
 }
 
 void AVRCharacter::GripLeft()

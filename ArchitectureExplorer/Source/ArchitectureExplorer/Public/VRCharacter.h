@@ -43,6 +43,7 @@ private:
 	void SnapTurn(float Rotation);
 	void SyncActorToPlayspaceMovement();
 	void StartFade(float FromAlpha, float ToAlpha, float FadeDuration);
+	void ActivateTeleport();
 	void BeginTeleport();
 	void EndTeleport();
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
@@ -136,4 +137,5 @@ private:
 
 	// State properties
 	float BlinkerSpeedOverride = 0.f;
+	bool bIsTeleportActive = false;
 };
