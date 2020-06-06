@@ -343,14 +343,15 @@ void AVRCharacter::UpdateTeleportArrow()
 {
 	if (!bTeleportActive || bTeleportLocked) return;
 
-	FRotator ActorRotation(0.f, GetActorRotation().Yaw, 0.f);
+	TeleportRotation = FRotator(0.f, GetActorRotation().Yaw, 0.f);
 
 	float ArrowUp = FMath::Clamp<float>(GetInputAxisValue(TEXT("TeleportUp")), -1, 1);
 	float ArrowRight = FMath::Clamp<float>(GetInputAxisValue(TEXT("TeleportRight")), -1, 1);
-	if (FMath::Abs(ArrowUp) <= RightController->GetThumbDeadZone() && FMath::Abs(ArrowRight) <= RightController->GetThumbDeadZone()) return;
+	
+	if (FMath::Abs(ArrowUp) > RightController->GetThumbDeadZone() || FMath::Abs(ArrowRight) > RightController->GetThumbDeadZone())
+		TeleportRotation += FVector(ArrowUp, ArrowRight, 0.f).Rotation();
 
-	TeleportRotation = FVector(ArrowUp, ArrowRight, 0.f).Rotation();
-	TeleportArrow->SetWorldRotation(ActorRotation + TeleportRotation);
+	TeleportArrow->SetWorldRotation(TeleportRotation);
 }
 
 void AVRCharacter::MoveForward(float AxisValue)
@@ -370,7 +371,6 @@ void AVRCharacter::MoveRight(float AxisValue)
 void AVRCharacter::TurnRight(float AxisValue)
 {
 	if (bTeleportActive) return;
-
 	float MoveValue = FMath::Clamp<float>(AxisValue, -1, 1);
 	if (MoveValue == 0.f)
 	{
@@ -394,7 +394,6 @@ void AVRCharacter::TurnRight(float AxisValue)
 void AVRCharacter::SnapTurnRight()
 {
 	if (bTeleportActive) return;
-
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, TurnDegreesPerSecond), SnapTurnFadeDuration, false);
@@ -403,7 +402,6 @@ void AVRCharacter::SnapTurnRight()
 void AVRCharacter::SnapTurnLeft()
 {
 	if (bTeleportActive) return;
-
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, -TurnDegreesPerSecond), SnapTurnFadeDuration, false);
@@ -433,7 +431,6 @@ void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 void AVRCharacter::ActivateTeleport()
 {
 	if (bTeleportActive) return;
-
 	SetTeleportEnabled(true);
 	SetTeleportLocked(false);
 }
