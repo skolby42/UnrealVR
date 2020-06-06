@@ -36,6 +36,10 @@ AVRCharacter::AVRCharacter()
 	DestinationMarker->SetCollisionProfileName(TEXT("NoCollision"));
 	DestinationMarker->SetupAttachment(GetRootComponent());
 
+	TeleportArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportArrow"));
+	TeleportArrow->SetCollisionProfileName(TEXT("NoCollision"));
+	TeleportArrow->SetupAttachment(DestinationMarker);
+
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComponent"));
 	PostProcessComponent->SetupAttachment(GetRootComponent());
 
@@ -48,7 +52,7 @@ void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ensure(DestinationMarker))
+	if (DestinationMarker)
 		DestinationMarker->SetVisibility(false);
 	CreateBlinkerMaterialInstance();
 	CreateHandControllers();
@@ -71,6 +75,8 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AVRCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AVRCharacter::MoveRight);
+	PlayerInputComponent->BindAxis(TEXT("TeleportUp"));
+	PlayerInputComponent->BindAxis(TEXT("TeleportRight"));
 	
 	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Pressed, this, &AVRCharacter::ActivateTeleport);
 	PlayerInputComponent->BindAction(TEXT("Teleport"), EInputEvent::IE_Released, this, &AVRCharacter::BeginTeleport);
@@ -175,27 +181,40 @@ void AVRCharacter::UpdateDestinationMarker()
 	TArray<FVector> Path;
 	FVector Location;
 
-	if (!bIsTeleportActive)
+	if (!bTeleportActive)
 	{
-		DestinationMarker->SetVisibility(false);
-		DrawTeleportArc(Path);
+		ResetTeleport();
 		return;
 	}
 
-	bool bHasDestination = FindTeleportDestination(Path, Location);
+	if (bTeleportLocked) return;
 
-	if (bHasDestination)
+	bHasTeleportDestination = FindTeleportDestination(Path, Location);
+
+	if (bHasTeleportDestination)
 	{
 		DestinationMarker->SetVisibility(true);
 		DestinationMarker->SetWorldLocation(Location);
+		TeleportArrow->SetVisibility(true);
 	}
 	else
 	{
 		Path.Empty();
 		DestinationMarker->SetVisibility(false);
+		TeleportArrow->SetVisibility(false);
 	}
 
 	DrawTeleportArc(Path);
+	UpdateTeleportArrow();
+}
+
+void AVRCharacter::ResetTeleport()
+{
+	SetTeleportEnabled(false);
+	DestinationMarker->SetVisibility(false);
+	TeleportArrow->SetVisibility(false);
+	TArray<FVector> EmptyPath;
+	DrawTeleportArc(EmptyPath);
 }
 
 bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const
@@ -206,8 +225,9 @@ bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& Ou
 	FVector Start = RightController->GetActorLocation() + LookVector * 3.f;  // Start line trace in front of motion controller
 	FVector LaunchVector = LookVector * TeleportProjectileSpeed;
 
+	float TeleportProjectileRadius = 0.f;
 	FPredictProjectilePathParams ProjectileParams(
-		TeleportProjectileRadius, 
+		TeleportProjectileRadius,
 		Start, 
 		LaunchVector, 
 		TeleportSimulationTime, 
@@ -233,7 +253,7 @@ bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& Ou
 
 	if (!bOnNavMesh) return false;
 
-	OutLocation = NavLocation.Location;
+	OutLocation = ProjectileResult.HitResult.Location;
 
 	return true;
 }
@@ -319,6 +339,20 @@ void AVRCharacter::UpdateTeleportPath(const TArray<FVector>& Path)
 	TeleportPath->UpdateSpline();
 }
 
+void AVRCharacter::UpdateTeleportArrow()
+{
+	if (!bTeleportActive || bTeleportLocked) return;
+
+	FRotator ActorRotation(0.f, GetActorRotation().Yaw, 0.f);
+
+	float ArrowUp = FMath::Clamp<float>(GetInputAxisValue(TEXT("TeleportUp")), -1, 1);
+	float ArrowRight = FMath::Clamp<float>(GetInputAxisValue(TEXT("TeleportRight")), -1, 1);
+	if (FMath::Abs(ArrowUp) <= RightController->GetThumbDeadZone() && FMath::Abs(ArrowRight) <= RightController->GetThumbDeadZone()) return;
+
+	TeleportRotation = FVector(ArrowUp, ArrowRight, 0.f).Rotation();
+	TeleportArrow->SetWorldRotation(ActorRotation + TeleportRotation);
+}
+
 void AVRCharacter::MoveForward(float AxisValue)
 {
 	if (!Camera) return;
@@ -335,6 +369,8 @@ void AVRCharacter::MoveRight(float AxisValue)
 
 void AVRCharacter::TurnRight(float AxisValue)
 {
+	if (bTeleportActive) return;
+
 	float MoveValue = FMath::Clamp<float>(AxisValue, -1, 1);
 	if (MoveValue == 0.f)
 	{
@@ -357,17 +393,16 @@ void AVRCharacter::TurnRight(float AxisValue)
 
 void AVRCharacter::SnapTurnRight()
 {
-	if (bIsTeleportActive) return;
+	if (bTeleportActive) return;
 
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SnapTurn, TurnDegreesPerSecond), SnapTurnFadeDuration, false);
-	
 }
 
 void AVRCharacter::SnapTurnLeft()
 {
-	if (bIsTeleportActive) return;
+	if (bTeleportActive) return;
 
 	StartFade(0.f, 1.f, SnapTurnFadeDuration);
 	FTimerHandle TimerHandle;
@@ -376,7 +411,7 @@ void AVRCharacter::SnapTurnLeft()
 
 void AVRCharacter::SnapTurn(float Rotation)
 {
-	auto PlayerController = Cast<APlayerController>(GetController());
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (!PlayerController) return;
 
 	PlayerController->AddYawInput(Rotation / PlayerController->InputYawScale);
@@ -385,7 +420,7 @@ void AVRCharacter::SnapTurn(float Rotation)
 
 void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 {
-	auto PlayerController = Cast<APlayerController>(GetController());
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (!PlayerController) return;
 
 	auto PlayerCameraManager = PlayerController->PlayerCameraManager;
@@ -397,11 +432,21 @@ void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 
 void AVRCharacter::ActivateTeleport()
 {
-	bIsTeleportActive = true;
+	if (bTeleportActive) return;
+
+	SetTeleportEnabled(true);
+	SetTeleportLocked(false);
 }
 
 void AVRCharacter::BeginTeleport()
 {
+	if (!bHasTeleportDestination)
+	{
+		ResetTeleport();
+		return;
+	}
+
+	SetTeleportLocked(true);
 	StartFade(0.f, 1.f, TeleportFadeDuration);
 
 	FTimerHandle TimerHandle;
@@ -413,10 +458,26 @@ void AVRCharacter::EndTeleport()
 	FVector Destination = DestinationMarker->GetComponentLocation();
 	Destination += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
 	SetActorLocation(Destination);
+	
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+		PlayerController->SetControlRotation(TeleportRotation);
 
+	ResetTeleport();
 	StartFade(1.0f, 0.f, TeleportFadeDuration);
+	
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AVRCharacter::SetTeleportEnabled, false), TeleportFadeDuration, false);
+}
 
-	bIsTeleportActive = false;
+void AVRCharacter::SetTeleportEnabled(bool bEnabled)
+{
+	bTeleportActive = bEnabled;
+}
+
+void AVRCharacter::SetTeleportLocked(bool bLocked)
+{
+	bTeleportLocked = bLocked;
 }
 
 void AVRCharacter::GripLeft()

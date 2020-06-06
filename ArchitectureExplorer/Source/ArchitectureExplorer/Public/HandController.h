@@ -39,6 +39,7 @@ public:
 
 	void Grip();
 	void Release();
+	float GetThumbDeadZone();
 
 private:
 	// Callbacks
@@ -57,10 +58,15 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	UHapticFeedbackEffect_Curve* HandHoldRumble = nullptr;
 
+	UPROPERTY(EditDefaultsOnly)
+	float ThumbDeadZone = 0.1f;
+
 	// Helpers
 	bool CanClimb() const;
 	void ControllerRumble() const;
 	void Climb();
+	bool CanPickUp() const;
+	void PickUp();
 
 	//State
 	bool bCanClimb = false;

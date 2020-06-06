@@ -130,6 +130,11 @@ void AHandController::Release()
 	}
 }
 
+float AHandController::GetThumbDeadZone()
+{
+	return ThumbDeadZone;
+}
+
 void AHandController::Climb()
 {
 	if (!bIsClimbing) return;
@@ -140,4 +145,13 @@ void AHandController::Climb()
 	FVector ControllerDelta = GetActorLocation() - ClimbingStartLocation;
 	AddActorWorldOffset(ControllerDelta);
 	Parent->AddActorWorldOffset(-ControllerDelta);
+}
+
+bool AHandController::CanPickUp() const
+{
+	return false;
+}
+
+void AHandController::PickUp()
+{
 }

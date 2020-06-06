@@ -46,11 +46,15 @@ private:
 	void ActivateTeleport();
 	void BeginTeleport();
 	void EndTeleport();
+	void SetTeleportEnabled(bool bEnabled);
+	void SetTeleportLocked(bool bLocked);
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
 	bool FindTeleportDestinationHMD(FVector& OutLocation) const;
 	void DrawTeleportArc(const TArray<FVector>& Path);
 	void UpdateTeleportPath(const TArray<FVector>& Path);
+	void UpdateTeleportArrow();
 	void UpdateDestinationMarker();
+	void ResetTeleport();
 	void CreateBlinkerMaterialInstance();
 	void UpdateBlinkers();
 	FVector2D GetBlinkerCenter();
@@ -82,6 +86,9 @@ private:
 	UStaticMeshComponent* DestinationMarker = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* TeleportArrow = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
 	UPostProcessComponent* PostProcessComponent = nullptr;
 
 	UPROPERTY()
@@ -106,10 +113,7 @@ private:
 	float TeleportFadeDuration = 1.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 50.f);
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	float TeleportProjectileRadius = 5.f;
+	FVector TeleportProjectionExtent = FVector(100.f);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportProjectileSpeed = 800.f;
@@ -137,5 +141,8 @@ private:
 
 	// State properties
 	float BlinkerSpeedOverride = 0.f;
-	bool bIsTeleportActive = false;
+	bool bTeleportActive = false;
+	bool bTeleportLocked = false;
+	FRotator TeleportRotation;
+	bool bHasTeleportDestination = false;
 };
