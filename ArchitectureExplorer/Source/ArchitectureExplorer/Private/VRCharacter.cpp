@@ -1,6 +1,5 @@
 // Copyright Scott Kolby 2020
 
-
 #include "VRCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -219,43 +218,8 @@ void AVRCharacter::ResetTeleport()
 
 bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const
 {
-	if (!DestinationMarker || !RightController) return false;
-		
-	FVector LookVector = RightController->GetActorForwardVector();
-	FVector Start = RightController->GetActorLocation() + LookVector * 3.f;  // Start line trace in front of motion controller
-	FVector LaunchVector = LookVector * TeleportProjectileSpeed;
-
-	float TeleportProjectileRadius = 0.f;
-	FPredictProjectilePathParams ProjectileParams(
-		TeleportProjectileRadius,
-		Start, 
-		LaunchVector, 
-		TeleportSimulationTime, 
-		ECollisionChannel::ECC_Visibility);
-	//ProjectileParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
-	ProjectileParams.bTraceComplex = true;  // Get more collision locations if needed
-
-	FPredictProjectilePathResult ProjectileResult;
-
-	bool bHit = UGameplayStatics::PredictProjectilePath(this, ProjectileParams, ProjectileResult);
-
-	if (!bHit) return false;
-
-	FNavLocation NavLocation;
-
-	for (FPredictProjectilePathPointData PointData : ProjectileResult.PathData)
-	{
-		OutPath.Add(PointData.Location);
-	}
-
-	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
-	bool bOnNavMesh = NavSystem->ProjectPointToNavigation(ProjectileResult.HitResult.Location, NavLocation, TeleportProjectionExtent);
-
-	if (!bOnNavMesh) return false;
-
-	OutLocation = ProjectileResult.HitResult.Location;
-
-	return true;
+	if (!RightController) return false;
+	return RightController->FindTeleportDestination(OutPath, OutLocation);
 }
 
 bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
@@ -273,6 +237,7 @@ bool AVRCharacter::FindTeleportDestinationHMD(FVector& OutLocation) const
 	if (!bHit) return false;
 
 	FNavLocation NavLocation;
+	FVector TeleportProjectionExtent(100.f);
 	bool bOnNavMesh = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld())->ProjectPointToNavigation(HitResult.Location, NavLocation, TeleportProjectionExtent);
 
 	if (!bOnNavMesh) return false;

@@ -113,15 +113,6 @@ private:
 	float TeleportFadeDuration = 1.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	FVector TeleportProjectionExtent = FVector(100.f);
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	float TeleportProjectileSpeed = 800.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	float TeleportSimulationTime = 1.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	UStaticMesh* TeleportArcMesh = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")

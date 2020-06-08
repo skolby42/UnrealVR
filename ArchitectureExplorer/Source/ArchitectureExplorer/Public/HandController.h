@@ -8,6 +8,7 @@
 
 class UHapticFeedbackEffect_Curve;
 class UMotionControllerComponent;
+class UPhysicsHandleComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHandControllerDelegate);
 
@@ -22,6 +23,7 @@ public:
 
 	void SetHand(EControllerHand Hand);
 	void PairController(AHandController* OtherController);
+	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
@@ -38,7 +40,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void Grip();
+	void StartCarry();
+	void StartClimb();
 	void Release();
+	void FinishCarry();
+	void FinishClimb();
 	float GetThumbDeadZone();
 
 private:
@@ -58,19 +64,39 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	UHapticFeedbackEffect_Curve* HandHoldRumble = nullptr;
 
+	UPROPERTY(VisibleAnywhere)
+	UPhysicsHandleComponent* PickupHandle = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* PickupLocation = nullptr;
+
 	UPROPERTY(EditDefaultsOnly)
-	float ThumbDeadZone = 0.1f;
+	float ThumbDeadZone = 0.25f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
+	FVector TeleportProjectionExtent = FVector(100.f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
+	float TeleportProjectileSpeed = 800.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
+	float TeleportSimulationTime = 1.f;
 
 	// Helpers
-	bool CanClimb() const;
 	void ControllerRumble() const;
-	void Climb();
-	bool CanPickUp() const;
-	void PickUp();
+	AActor* GetOverlappingActorWithTag(const FName& Tag) const;
+	bool CanClimb() const;
+	void UpdateClimb();
+	bool CanCarry() const;
+	void UpdateCarry();
 
 	//State
 	bool bCanClimb = false;
 	bool bIsClimbing = false;
-	FVector ClimbingStartLocation;
+	FVector ClimbStartLocation;
+
+	bool bCanCarry = false;
+	bool bIsCarrying = false;
+
 	AHandController* PairedController;
 };
