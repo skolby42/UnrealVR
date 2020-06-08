@@ -107,6 +107,11 @@ bool AHandController::FindTeleportDestination(TArray<FVector>& OutPath, FVector&
 	return true;
 }
 
+bool AHandController::IsCarrying(UPrimitiveComponent* OtherActor) const
+{
+	return PickupHandle && PickupHandle->GrabbedComponent == OtherActor;
+}
+
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (!bCanClimb && CanClimb())
@@ -240,12 +245,12 @@ void AHandController::StartCarry()
 			{
 				bIsCarrying = true;
 				PickupHandle->GrabComponentAtLocationWithRotation(Component, NAME_None, Component->GetComponentLocation(), Component->GetComponentRotation());
+
+				if (PairedController && PairedController->IsCarrying(Component))
+					PairedController->Release();
 			}
 		}
 	}
-
-	if (PairedController && PairedController->bIsCarrying)
-		PairedController->Release();
 }
 
 void AHandController::FinishCarry()

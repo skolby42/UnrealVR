@@ -408,6 +408,8 @@ void AVRCharacter::BeginTeleport()
 		return;
 	}
 
+	if (bTeleportLocked) return;
+
 	SetTeleportLocked(true);
 	StartFade(0.f, 1.f, TeleportFadeDuration);
 
@@ -420,6 +422,7 @@ void AVRCharacter::EndTeleport()
 	FVector Destination = DestinationMarker->GetComponentLocation();
 	Destination += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
 	SetActorLocation(Destination);
+	SetActorRotation(TeleportRotation);
 	
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)

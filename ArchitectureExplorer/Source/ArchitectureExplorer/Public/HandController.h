@@ -24,6 +24,7 @@ public:
 	void SetHand(EControllerHand Hand);
 	void PairController(AHandController* OtherController);
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
+	bool IsCarrying(UPrimitiveComponent* OtherActor) const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
