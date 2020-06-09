@@ -34,11 +34,18 @@ public:
 	UFUNCTION(BlueprintPure)
 	class UStaticMeshComponent* GetControllerMesh();
 
+	void TriggerPressed();
+	void TriggerReleased();
+
 private:
+
 	// Default sub object
 	UPROPERTY(VisibleAnywhere)
 	class UMotionControllerComponent* MotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* ControllerMesh = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AStroke> StrokeClass = nullptr;
 };

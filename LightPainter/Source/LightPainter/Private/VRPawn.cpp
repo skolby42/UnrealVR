@@ -24,6 +24,14 @@ void AVRPawn::BeginPlay()
 	CreateHandControllers();
 }
 
+void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Pressed, this, &AVRPawn::TriggerPressed);
+	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::TriggerReleased);
+}
+
 void AVRPawn::CreateHandControllers()
 {
 	if (!HandControllerClass) return;
@@ -42,4 +50,16 @@ void AVRPawn::CreateHandControllers()
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
+}
+
+void AVRPawn::TriggerPressed()
+{
+	if (!RightController) return;
+	RightController->TriggerPressed();
+}
+
+void AVRPawn::TriggerReleased()
+{
+	if (!RightController) return;
+	RightController->TriggerReleased();
 }

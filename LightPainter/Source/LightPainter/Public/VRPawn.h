@@ -16,10 +16,15 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 private:
 
 	void CreateHandControllers();
+
+	// Pass through methods
+	void TriggerPressed();
+	void TriggerReleased();
 
 private:
 
