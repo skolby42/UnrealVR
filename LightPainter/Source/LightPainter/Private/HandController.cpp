@@ -28,6 +28,10 @@ void AHandController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	if (CurrentStroke)
+	{
+		CurrentStroke->Update(GetCursorLocation());
+	}
 }
 
 void AHandController::SetHand(EControllerHand ControllerHand)
@@ -45,10 +49,17 @@ UStaticMeshComponent* AHandController::GetControllerMesh()
 void AHandController::TriggerPressed()
 {
 	if (!StrokeClass) return;
-	AStroke* Stroke = GetWorld()->SpawnActor<AStroke>(StrokeClass);
-	Stroke->SetActorLocation(GetActorLocation() + GetActorForwardVector() * 5.f);
+	CurrentStroke = GetWorld()->SpawnActor<AStroke>(StrokeClass);
+	CurrentStroke->SetActorLocation(GetCursorLocation());
+	CurrentStroke->InitializeStartPoint();
 }
 
 void AHandController::TriggerReleased()
 {
+	CurrentStroke = nullptr;
+}
+
+FVector AHandController::GetCursorLocation()
+{
+	return GetActorLocation() + GetActorForwardVector() * StrokeDistance;
 }

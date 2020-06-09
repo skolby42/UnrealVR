@@ -39,6 +39,10 @@ public:
 
 private:
 
+	FVector GetCursorLocation();
+
+private:
+
 	// Default sub object
 	UPROPERTY(VisibleAnywhere)
 	class UMotionControllerComponent* MotionController = nullptr;
@@ -46,6 +50,13 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* ControllerMesh = nullptr;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AStroke> StrokeClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	float StrokeDistance = 5.f;
+
+	//State
+	UPROPERTY()
+	AStroke* CurrentStroke = nullptr;
 };
