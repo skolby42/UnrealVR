@@ -25,8 +25,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	class UStaticMeshComponent* GetControllerMesh();
 
-	virtual void TriggerPressed();
-	virtual void TriggerReleased();
+	virtual void TriggerPressed() {}
+	virtual void TriggerReleased() {}
 
 protected:
 	virtual void BeginPlay() override;

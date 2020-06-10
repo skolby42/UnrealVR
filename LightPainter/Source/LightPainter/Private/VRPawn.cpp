@@ -22,7 +22,7 @@ void AVRPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CreatePaintBrushHandControllers();
+	CreateHandControllers();
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -36,10 +36,10 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Load"), EInputEvent::IE_Released, this, &AVRPawn::Load);
 }
 
-void AVRPawn::CreatePaintBrushHandControllers()
+void AVRPawn::CreateHandControllers()
 {
-	if (!PaintBrushHandControllerClass) return;
-	LeftController = GetWorld()->SpawnActor<AHandControllerBase>(PaintBrushHandControllerClass);
+	if (!HandControllerClass) return;
+	LeftController = GetWorld()->SpawnActor<AHandControllerBase>(HandControllerClass);
 	if (LeftController)
 	{
 		LeftController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -47,7 +47,7 @@ void AVRPawn::CreatePaintBrushHandControllers()
 		LeftController->SetOwner(this);  // Fix for 4.22+
 	}
 
-	RightController = GetWorld()->SpawnActor<AHandControllerBase>(PaintBrushHandControllerClass);
+	RightController = GetWorld()->SpawnActor<AHandControllerBase>(HandControllerClass);
 	if (RightController)
 	{
 		RightController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);

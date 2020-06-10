@@ -44,11 +44,3 @@ UStaticMeshComponent* AHandControllerBase::GetControllerMesh()
 {
 	return ControllerMesh;
 }
-
-void AHandControllerBase::TriggerPressed()
-{
-}
-
-void AHandControllerBase::TriggerReleased()
-{
-}

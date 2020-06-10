@@ -20,7 +20,7 @@ protected:
 
 private:
 
-	void CreatePaintBrushHandControllers();
+	void CreateHandControllers();
 
 	void Save();
 	void Load();
@@ -47,5 +47,5 @@ private:
 
 	// Config
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AHandControllerBase> PaintBrushHandControllerClass;
+	TSubclassOf<AHandControllerBase> HandControllerClass;
 };
