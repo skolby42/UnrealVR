@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "HandController.h"
+#include "LightPainter/Saving/LightPainterSaveGame.h"
 
 AVRPawn::AVRPawn()
 {
@@ -22,6 +23,10 @@ void AVRPawn::BeginPlay()
 	Super::BeginPlay();
 	
 	CreateHandControllers();
+
+	/*ULightPainterSaveGame* LightPainterSaveGame = ULightPainterSaveGame::Create();
+	if (LightPainterSaveGame)
+		LightPainterSaveGame->Save();*/
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
