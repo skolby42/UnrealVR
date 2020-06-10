@@ -19,19 +19,18 @@ public:
 	void InitializeStartPoint();
 
 private:
-	class USplineMeshComponent* CreateSplineMesh(const FVector& CursorLocation);
+	FTransform GetNextSegmentTransform(const FVector CurrentLocation) const;
+	FVector GetNextSegmentLocation() const;
+	FQuat GetNextSegmentRotation(const FVector CurrentLocation) const;
+	FVector GetNextSegmentScale(const FVector CurrentLocation) const;
 
-private:
+
 	// Components
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;
 
-	// Config
-	UPROPERTY(EditAnywhere, Category = "Setup")
-	UStaticMesh* SplineMesh = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Setup")
-	UMaterialInterface* SplineMaterial = nullptr;
+	UPROPERTY(VisibleAnywhere)
+	class UInstancedStaticMeshComponent* StrokeMeshes = nullptr;
 
 	//State
 	FVector PrevCursorLocation;
