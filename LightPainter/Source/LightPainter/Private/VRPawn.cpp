@@ -23,10 +23,6 @@ void AVRPawn::BeginPlay()
 	Super::BeginPlay();
 	
 	CreateHandControllers();
-
-	/*ULightPainterSaveGame* LightPainterSaveGame = ULightPainterSaveGame::Create();
-	if (LightPainterSaveGame)
-		LightPainterSaveGame->Save();*/
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -35,6 +31,9 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Pressed, this, &AVRPawn::TriggerPressed);
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::TriggerReleased);
+
+	PlayerInputComponent->BindAction(TEXT("Save"), EInputEvent::IE_Released, this, &AVRPawn::Save);
+	PlayerInputComponent->BindAction(TEXT("Load"), EInputEvent::IE_Released, this, &AVRPawn::Load);
 }
 
 void AVRPawn::CreateHandControllers()
@@ -54,6 +53,29 @@ void AVRPawn::CreateHandControllers()
 		RightController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
+	}
+}
+
+void AVRPawn::Save()
+{
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Create();
+	if (SaveGame)
+	{
+		SaveGame->SerializeFromWorld(GetWorld());
+		SaveGame->Save();
+	}	
+}
+
+void AVRPawn::Load()
+{
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load();
+	if (SaveGame)
+	{
+		SaveGame->DeserializeToWorld(GetWorld());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Save game not loaded"))
 	}
 }
 

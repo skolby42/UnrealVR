@@ -3,6 +3,7 @@
 
 #include "Stroke.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "Engine/World.h"
 
 // Sets default values
 AStroke::AStroke()
@@ -19,8 +20,33 @@ AStroke::AStroke()
 	JointMeshes->SetupAttachment(Root);
 }
 
+FStrokeState AStroke::SerializeToStruct() const
+{
+	FStrokeState StrokeState;
+
+	StrokeState.Class = GetClass();  // BP or C++ class
+	StrokeState.ControlPoints = ControlPoints;
+
+	return StrokeState;
+}
+
+AStroke* AStroke::DeserializeFromStruct(UWorld* World, const FStrokeState& StrokeState)
+{
+	AStroke* Stroke = World->SpawnActor<AStroke>(StrokeState.Class);
+	if (Stroke)
+	{
+		for (FVector ControlPoint : StrokeState.ControlPoints)
+		{
+			Stroke->Update(ControlPoint);
+		}
+	}
+	return Stroke;
+}
+
 void AStroke::Update(const FVector& CursorLocation)
 {
+	ControlPoints.Add(CursorLocation);
+
 	if (InitializePrevLocation(CursorLocation)) return;
 
 	if (StrokeMeshes)
@@ -35,6 +61,8 @@ void AStroke::Update(const FVector& CursorLocation)
 
 	PrevCursorLocation = CursorLocation;
 }
+
+
 
 bool AStroke::InitializePrevLocation(const FVector& CurrentLocation)
 {

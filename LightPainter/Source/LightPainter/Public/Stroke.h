@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "LightPainter/Saving/LightPainterSaveGame.h"
 #include "Stroke.generated.h"
 
 UCLASS()
@@ -16,6 +17,8 @@ public:
 	AStroke();
 	
 	void Update(const FVector& CursorLocation);
+	FStrokeState SerializeToStruct() const;
+	static AStroke* DeserializeFromStruct(UWorld* World, const FStrokeState& StrokeState);
 
 private:
 	bool InitializePrevLocation(const FVector& CurrentLocation);
@@ -39,4 +42,5 @@ private:
 
 	//State
 	FVector PrevCursorLocation;
+	TArray<FVector> ControlPoints;
 };
