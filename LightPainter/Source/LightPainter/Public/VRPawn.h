@@ -40,12 +40,12 @@ private:
 
 	// References
 	UPROPERTY()
-	class APaintBrushHandController* LeftController = nullptr;
+	class AHandControllerBase* LeftController = nullptr;
 	
 	UPROPERTY()
-	class APaintBrushHandController* RightController = nullptr;
+	class AHandControllerBase* RightController = nullptr;
 
 	// Config
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<APaintBrushHandController> PaintBrushHandControllerClass;
+	TSubclassOf<AHandControllerBase> PaintBrushHandControllerClass;
 };

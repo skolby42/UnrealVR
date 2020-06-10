@@ -3,8 +3,8 @@
 #include "VRPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
+#include "HandControllerBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "PaintBrushHandController.h"
 #include "LightPainter/Saving/LightPainterSaveGame.h"
 
 AVRPawn::AVRPawn()
@@ -39,7 +39,7 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AVRPawn::CreatePaintBrushHandControllers()
 {
 	if (!PaintBrushHandControllerClass) return;
-	LeftController = GetWorld()->SpawnActor<APaintBrushHandController>(PaintBrushHandControllerClass);
+	LeftController = GetWorld()->SpawnActor<AHandControllerBase>(PaintBrushHandControllerClass);
 	if (LeftController)
 	{
 		LeftController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -47,7 +47,7 @@ void AVRPawn::CreatePaintBrushHandControllers()
 		LeftController->SetOwner(this);  // Fix for 4.22+
 	}
 
-	RightController = GetWorld()->SpawnActor<APaintBrushHandController>(PaintBrushHandControllerClass);
+	RightController = GetWorld()->SpawnActor<AHandControllerBase>(PaintBrushHandControllerClass);
 	if (RightController)
 	{
 		RightController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);

@@ -3,19 +3,12 @@
 #include "PaintBrushHandController.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
-#include "MotionControllerComponent.h"
 #include "Stroke.h"
 
 APaintBrushHandController::APaintBrushHandController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MotionController"));
-	SetRootComponent(MotionController);
-	//MotionController->SetShowDeviceModel(true);
-
-	ControllerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControllerMesh"));
-	ControllerMesh->SetupAttachment(MotionController);
 }
 
 void APaintBrushHandController::BeginPlay()
@@ -32,18 +25,6 @@ void APaintBrushHandController::Tick(float DeltaTime)
 	{
 		CurrentStroke->Update(GetCursorLocation());
 	}
-}
-
-void APaintBrushHandController::SetHand(EControllerHand ControllerHand)
-{
-	if (!MotionController) return;
-	MotionController->SetTrackingSource(ControllerHand);
-	UpdateControllerMesh(ControllerHand);
-}
-
-UStaticMeshComponent* APaintBrushHandController::GetControllerMesh()
-{
-	return ControllerMesh;
 }
 
 void APaintBrushHandController::TriggerPressed()
