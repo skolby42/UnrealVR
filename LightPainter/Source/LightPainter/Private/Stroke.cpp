@@ -12,48 +12,75 @@ AStroke::AStroke()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
 
-	StrokeMeshes = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("InstancedStaticMesh"));
+	StrokeMeshes = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("StrokeMeshes"));
 	StrokeMeshes->SetupAttachment(Root);
+
+	JointMeshes = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("StrokeJoints"));
+	JointMeshes->SetupAttachment(Root);
 }
 
 void AStroke::Update(const FVector& CursorLocation)
-{	
+{
+	if (InitializePrevLocation(CursorLocation)) return;
+
 	if (StrokeMeshes)
 	{
 		StrokeMeshes->AddInstance(GetNextSegmentTransform(CursorLocation));
 	}
 
+	if (JointMeshes)
+	{
+		JointMeshes->AddInstance(GetNextJointTransform(CursorLocation));
+	}
+
 	PrevCursorLocation = CursorLocation;
 }
 
-void AStroke::InitializeStartPoint()
+bool AStroke::InitializePrevLocation(const FVector& CurrentLocation)
 {
-	PrevCursorLocation = GetActorLocation();
+	if (PrevCursorLocation.IsNearlyZero()) {
+
+		PrevCursorLocation = CurrentLocation;
+		if (JointMeshes)
+		{
+			JointMeshes->AddInstance(GetNextJointTransform(CurrentLocation));
+		}
+		return true;
+	}
+
+	return false;
 }
 
-FTransform AStroke::GetNextSegmentTransform(const FVector CurrentLocation) const
+FTransform AStroke::GetNextSegmentTransform(const FVector& CurrentLocation) const
 {
 	FTransform SegmentTransform;
 
-	SegmentTransform.SetLocation(GetNextSegmentLocation());
+	SegmentTransform.SetLocation(GetNextSegmentLocation(PrevCursorLocation));
 	SegmentTransform.SetRotation(GetNextSegmentRotation(CurrentLocation));
 	SegmentTransform.SetScale3D(GetNextSegmentScale(CurrentLocation));
 
 	return SegmentTransform;
 }
 
-FVector AStroke::GetNextSegmentLocation() const
+FTransform AStroke::GetNextJointTransform(const FVector& CurrentLocation) const
 {
-	return GetTransform().InverseTransformPosition(PrevCursorLocation);  // Convert from world to local coordinates
+	FTransform JointTransform;
+	JointTransform.SetLocation(GetNextSegmentLocation(CurrentLocation));
+	return JointTransform;
 }
 
-FQuat AStroke::GetNextSegmentRotation(const FVector CurrentLocation) const
+FVector AStroke::GetNextSegmentLocation(const FVector& CurrentLocation) const
+{
+	return GetTransform().InverseTransformPosition(CurrentLocation);  // Convert from world to local coordinates
+}
+
+FQuat AStroke::GetNextSegmentRotation(const FVector& CurrentLocation) const
 {
 	FVector Segment = CurrentLocation - PrevCursorLocation;
 	return FQuat::FindBetweenNormals(GetActorForwardVector(), Segment.GetSafeNormal());
 }
 
-FVector AStroke::GetNextSegmentScale(const FVector CurrentLocation) const
+FVector AStroke::GetNextSegmentScale(const FVector& CurrentLocation) const
 {
 	FVector Segment = CurrentLocation - PrevCursorLocation;
 	return FVector(Segment.Size(), 1.f, 1.f);

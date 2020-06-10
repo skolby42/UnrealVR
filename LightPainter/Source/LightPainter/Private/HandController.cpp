@@ -51,7 +51,6 @@ void AHandController::TriggerPressed()
 	if (!StrokeClass) return;
 	CurrentStroke = GetWorld()->SpawnActor<AStroke>(StrokeClass);
 	CurrentStroke->SetActorLocation(GetCursorLocation());
-	CurrentStroke->InitializeStartPoint();
 }
 
 void AHandController::TriggerReleased()

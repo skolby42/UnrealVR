@@ -16,13 +16,15 @@ public:
 	AStroke();
 	
 	void Update(const FVector& CursorLocation);
-	void InitializeStartPoint();
 
 private:
-	FTransform GetNextSegmentTransform(const FVector CurrentLocation) const;
-	FVector GetNextSegmentLocation() const;
-	FQuat GetNextSegmentRotation(const FVector CurrentLocation) const;
-	FVector GetNextSegmentScale(const FVector CurrentLocation) const;
+	bool InitializePrevLocation(const FVector& CurrentLocation);
+	FTransform GetNextSegmentTransform(const FVector& CurrentLocation) const;
+	FTransform GetNextJointTransform(const FVector& CurrentLocation) const;
+
+	FVector GetNextSegmentLocation(const FVector& CurrentLocation) const;
+	FQuat GetNextSegmentRotation(const FVector& CurrentLocation) const;
+	FVector GetNextSegmentScale(const FVector& CurrentLocation) const;
 
 
 	// Components
@@ -31,6 +33,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UInstancedStaticMeshComponent* StrokeMeshes = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	class UInstancedStaticMeshComponent* JointMeshes = nullptr;
 
 	//State
 	FVector PrevCursorLocation;
