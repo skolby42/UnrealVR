@@ -38,7 +38,7 @@ void ULightPainterSaveGame::DeserializeToWorld(UWorld* World)
 	
 	for (FStrokeState StrokeState : Strokes)
 	{
-		AStroke::, DeserializeFromStruct(StrokeState, World);
+		AStroke::DeserializeFromStruct(World, StrokeState);
 	}
 }
 

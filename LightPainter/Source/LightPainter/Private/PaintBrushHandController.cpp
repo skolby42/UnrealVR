@@ -1,12 +1,12 @@
 // Copyright Scott Kolby 2020
 
-#include "HandController.h"
+#include "PaintBrushHandController.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "MotionControllerComponent.h"
 #include "Stroke.h"
 
-AHandController::AHandController()
+APaintBrushHandController::APaintBrushHandController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -18,13 +18,13 @@ AHandController::AHandController()
 	ControllerMesh->SetupAttachment(MotionController);
 }
 
-void AHandController::BeginPlay()
+void APaintBrushHandController::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
-void AHandController::Tick(float DeltaTime)
+void APaintBrushHandController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
@@ -34,31 +34,31 @@ void AHandController::Tick(float DeltaTime)
 	}
 }
 
-void AHandController::SetHand(EControllerHand ControllerHand)
+void APaintBrushHandController::SetHand(EControllerHand ControllerHand)
 {
 	if (!MotionController) return;
 	MotionController->SetTrackingSource(ControllerHand);
 	UpdateControllerMesh(ControllerHand);
 }
 
-UStaticMeshComponent* AHandController::GetControllerMesh()
+UStaticMeshComponent* APaintBrushHandController::GetControllerMesh()
 {
 	return ControllerMesh;
 }
 
-void AHandController::TriggerPressed()
+void APaintBrushHandController::TriggerPressed()
 {
 	if (!StrokeClass) return;
 	CurrentStroke = GetWorld()->SpawnActor<AStroke>(StrokeClass);
 	CurrentStroke->SetActorLocation(GetCursorLocation());
 }
 
-void AHandController::TriggerReleased()
+void APaintBrushHandController::TriggerReleased()
 {
 	CurrentStroke = nullptr;
 }
 
-FVector AHandController::GetCursorLocation()
+FVector APaintBrushHandController::GetCursorLocation()
 {
 	return GetActorLocation() + GetActorForwardVector() * StrokeDistance;
 }

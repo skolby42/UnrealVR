@@ -4,7 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-#include "HandController.h"
+#include "PaintBrushHandController.h"
 #include "LightPainter/Saving/LightPainterSaveGame.h"
 
 AVRPawn::AVRPawn()
@@ -22,7 +22,7 @@ void AVRPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CreateHandControllers();
+	CreatePaintBrushHandControllers();
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -36,10 +36,10 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Load"), EInputEvent::IE_Released, this, &AVRPawn::Load);
 }
 
-void AVRPawn::CreateHandControllers()
+void AVRPawn::CreatePaintBrushHandControllers()
 {
-	if (!HandControllerClass) return;
-	LeftController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	if (!PaintBrushHandControllerClass) return;
+	LeftController = GetWorld()->SpawnActor<APaintBrushHandController>(PaintBrushHandControllerClass);
 	if (LeftController)
 	{
 		LeftController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -47,7 +47,7 @@ void AVRPawn::CreateHandControllers()
 		LeftController->SetOwner(this);  // Fix for 4.22+
 	}
 
-	RightController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	RightController = GetWorld()->SpawnActor<APaintBrushHandController>(PaintBrushHandControllerClass);
 	if (RightController)
 	{
 		RightController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);

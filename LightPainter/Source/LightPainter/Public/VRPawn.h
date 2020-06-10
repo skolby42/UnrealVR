@@ -20,7 +20,7 @@ protected:
 
 private:
 
-	void CreateHandControllers();
+	void CreatePaintBrushHandControllers();
 
 	void Save();
 	void Load();
@@ -40,12 +40,12 @@ private:
 
 	// References
 	UPROPERTY()
-	class AHandController* LeftController = nullptr;
+	class APaintBrushHandController* LeftController = nullptr;
 	
 	UPROPERTY()
-	class AHandController* RightController = nullptr;
+	class APaintBrushHandController* RightController = nullptr;
 
 	// Config
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AHandController> HandControllerClass;
+	TSubclassOf<APaintBrushHandController> PaintBrushHandControllerClass;
 };
