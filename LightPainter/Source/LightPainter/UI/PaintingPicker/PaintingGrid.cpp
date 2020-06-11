@@ -18,6 +18,18 @@ void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName)
 	USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(PaintingIndex));
 	if (!CardContainer) return;
 
-	CardContainer->ClearChildren();
 	CardContainer->AddChild(PaintingGridCardWidget);
+}
+
+void UPaintingGrid::ClearPaintings()
+{
+	if (!PaintingGrid) return;
+
+	for (int i = 0; i < PaintingGrid->GetChildrenCount(); ++i)
+	{
+		USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(i));
+		if (!CardContainer) continue;
+
+		CardContainer->ClearChildren();
+	}
 }

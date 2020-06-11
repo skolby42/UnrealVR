@@ -62,6 +62,8 @@ void APaintingPicker::LoadPaintingGrid()
 	UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
 	if (!PaintingGridWidget) return;
 
+	PaintingGridWidget->ClearPaintings();
+
 	TArray<FString> SlotNames = SaveGameIndex->GetSlotNames();
 	for (int32 i = 0; i < SlotNames.Num(); ++i)
 	{
