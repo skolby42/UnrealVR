@@ -4,20 +4,19 @@
 #include "PaintingGrid.h"
 #include "Components/SizeBox.h"
 #include "Components/UniformGridPanel.h"
+#include "PaintingGridCard.h"
 
 
-void UPaintingGrid::AddPainting()
+void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName)
 {
 	if (!PaintingGrid) return;
 
-	UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), GridCardClass);
-	if (!NewWidget) return;
+	UPaintingGridCard* PaintingGridCardWidget = CreateWidget<UPaintingGridCard>(GetWorld(), GridCardClass);
+	if (!PaintingGridCardWidget) return;
+	PaintingGridCardWidget->SetPaintingName(PaintingName);
 
-	int32 ChildCount = PaintingGrid->GetChildrenCount();
-	if (ChildCount == 0) return;
-
-	USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(0));
+	USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(PaintingIndex));
 	if (!CardContainer) return;
 
-	CardContainer->AddChild(NewWidget);
+	CardContainer->AddChild(PaintingGridCardWidget);
 }

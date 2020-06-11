@@ -2,8 +2,9 @@
 
 
 #include "PaintingPicker.h"
-#include "PaintingGrid.h"
 #include "Components/WidgetComponent.h"
+#include "LightPainter/Saving/LightPainterSaveGameIndex.h"
+#include "PaintingGrid.h"
 
 // Sets default values
 APaintingPicker::APaintingPicker()
@@ -24,12 +25,23 @@ void APaintingPicker::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (PaintingGrid)
-	{
-		UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
-		if (!PaintingGridWidget) return;
+	InitializePaintingGrid();
+}
 
-		PaintingGridWidget->AddPainting();
+void APaintingPicker::InitializePaintingGrid()
+{
+	if (!PaintingGrid) return;
+
+	ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
+	if (!SaveGameIndex) return;
+
+	UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
+	if (!PaintingGridWidget) return;
+
+	TArray<FString> SlotNames = SaveGameIndex->GetSlotNames();
+	for (int32 i = 0; i < SlotNames.Num(); ++i)
+	{
+		PaintingGridWidget->AddPainting(i, SlotNames[i]);
 	}
 }
 

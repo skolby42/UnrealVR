@@ -16,8 +16,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	
 private:
+	void InitializePaintingGrid();
+
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;
 
