@@ -38,8 +38,8 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AVRPawn::CreateHandControllers()
 {
-	if (!HandControllerClass) return;
-	LeftController = GetWorld()->SpawnActor<AHandControllerBase>(HandControllerClass);
+	if (!RightHandControllerClass) return;
+	LeftController = GetWorld()->SpawnActor<AHandControllerBase>(LeftHandControllerClass);
 	if (LeftController)
 	{
 		LeftController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -47,7 +47,7 @@ void AVRPawn::CreateHandControllers()
 		LeftController->SetOwner(this);  // Fix for 4.22+
 	}
 
-	RightController = GetWorld()->SpawnActor<AHandControllerBase>(HandControllerClass);
+	RightController = GetWorld()->SpawnActor<AHandControllerBase>(RightHandControllerClass);
 	if (RightController)
 	{
 		RightController->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);

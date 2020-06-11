@@ -46,5 +46,8 @@ private:
 
 	// Config
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AHandControllerBase> HandControllerClass;
+	TSubclassOf<AHandControllerBase> LeftHandControllerClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AHandControllerBase> RightHandControllerClass;
 };
