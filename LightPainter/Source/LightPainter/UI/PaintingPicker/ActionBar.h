@@ -7,6 +7,8 @@
 #include "Components/Button.h"
 #include "ActionBar.generated.h"
 
+class APaintingPicker;
+
 /**
  * 
  */
@@ -17,6 +19,7 @@ class LIGHTPAINTER_API UActionBar : public UUserWidget
 
 public:
 	bool Initialize() override;
+	void SetParentPicker(APaintingPicker* NewParentPicker);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
@@ -37,4 +40,7 @@ private:
 
 	UFUNCTION()
 	void ExitButtonClicked();
+
+	UPROPERTY()
+	APaintingPicker* ParentPicker = nullptr;
 };

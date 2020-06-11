@@ -13,12 +13,15 @@ class LIGHTPAINTER_API APaintingPicker : public AActor
 	
 public:	
 	APaintingPicker();
+	void AddPainting();
+	void ToggleDeleteMode();
 
 protected:
 	virtual void BeginPlay() override;
 	
 private:
-	void InitializePaintingGrid();
+	void LoadActionBar();
+	void LoadPaintingGrid();
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;

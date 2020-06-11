@@ -14,9 +14,10 @@ void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName)
 	UPaintingGridCard* PaintingGridCardWidget = CreateWidget<UPaintingGridCard>(GetWorld(), GridCardClass);
 	if (!PaintingGridCardWidget) return;
 	PaintingGridCardWidget->SetPaintingName(PaintingName);
-
+	
 	USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(PaintingIndex));
 	if (!CardContainer) return;
 
+	CardContainer->ClearChildren();
 	CardContainer->AddChild(PaintingGridCardWidget);
 }

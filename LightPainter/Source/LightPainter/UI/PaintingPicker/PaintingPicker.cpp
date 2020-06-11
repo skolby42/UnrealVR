@@ -3,8 +3,10 @@
 
 #include "PaintingPicker.h"
 #include "Components/WidgetComponent.h"
+#include "LightPainter/Saving/LightPainterSaveGame.h"
 #include "LightPainter/Saving/LightPainterSaveGameIndex.h"
 #include "PaintingGrid.h"
+#include "ActionBar.h"
 
 // Sets default values
 APaintingPicker::APaintingPicker()
@@ -25,10 +27,32 @@ void APaintingPicker::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	InitializePaintingGrid();
+	LoadActionBar();
+	LoadPaintingGrid();
 }
 
-void APaintingPicker::InitializePaintingGrid()
+void APaintingPicker::AddPainting()
+{
+	ULightPainterSaveGame::Create();
+	LoadPaintingGrid();
+}
+
+void APaintingPicker::ToggleDeleteMode()
+{
+	
+}
+
+void APaintingPicker::LoadActionBar()
+{
+	if (!ActionBar) return;
+
+	UActionBar* ActionBarWidget = Cast<UActionBar>(ActionBar->GetUserWidgetObject());
+	if (!ActionBarWidget) return;
+	
+	ActionBarWidget->SetParentPicker(this);
+}
+
+void APaintingPicker::LoadPaintingGrid()
 {
 	if (!PaintingGrid) return;
 

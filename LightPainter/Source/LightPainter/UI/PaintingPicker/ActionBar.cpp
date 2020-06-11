@@ -2,6 +2,8 @@
 
 
 #include "ActionBar.h"
+#include "PaintingPicker.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 bool UActionBar::Initialize()
 {
@@ -19,17 +21,24 @@ bool UActionBar::Initialize()
 	return true;
 }
 
+void UActionBar::SetParentPicker(APaintingPicker* NewParentPicker)
+{
+	ParentPicker = NewParentPicker;
+}
+
 void UActionBar::AddButtonClicked()
 {
-	
+	if (!ParentPicker) return;
+	ParentPicker->AddPainting();
 }
 
 void UActionBar::DeleteButtonClicked()
 {
-	
+	if (!ParentPicker) return;
+	ParentPicker->ToggleDeleteMode();
 }
 
 void UActionBar::ExitButtonClicked()
 {
-	
+	UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
 }
