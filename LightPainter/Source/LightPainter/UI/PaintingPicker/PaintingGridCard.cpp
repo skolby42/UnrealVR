@@ -16,5 +16,6 @@ void UPaintingGridCard::SetPaintingName(FString NewPaintingName)
 void UPaintingGridCard::CardButtonClicked()
 {
 	UStereoLayerFunctionLibrary::ShowSplashScreen();  // Workaround for bug causing hang when opening level
+	// TODO refactor magic string
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Canvas"), true, TEXT("SlotName=" + PaintingName));
 }

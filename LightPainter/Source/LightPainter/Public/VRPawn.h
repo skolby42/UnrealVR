@@ -23,7 +23,6 @@ private:
 	void CreateHandControllers();
 
 	void Save();
-	void Load();
 
 	// Pass through methods
 	void TriggerPressed();

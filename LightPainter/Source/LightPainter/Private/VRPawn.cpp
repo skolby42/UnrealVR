@@ -24,11 +24,11 @@ void AVRPawn::BeginPlay()
 	
 	CreateHandControllers();
 
-	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Create();
+	/*ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Create();
 	if (SaveGame)
 	{
 		CurrentSlotName = SaveGame->GetSlotName();
-	}
+	}*/
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -39,7 +39,6 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::TriggerReleased);
 
 	PlayerInputComponent->BindAction(TEXT("Save"), EInputEvent::IE_Released, this, &AVRPawn::Save);
-	PlayerInputComponent->BindAction(TEXT("Load"), EInputEvent::IE_Released, this, &AVRPawn::Load);
 }
 
 void AVRPawn::CreateHandControllers()
@@ -70,19 +69,6 @@ void AVRPawn::Save()
 		SaveGame->SerializeFromWorld(GetWorld());
 		SaveGame->Save();
 	}	
-}
-
-void AVRPawn::Load()
-{
-	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(CurrentSlotName);
-	if (SaveGame)
-	{
-		SaveGame->DeserializeToWorld(GetWorld());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Save game not loaded"))
-	}
 }
 
 void AVRPawn::TriggerPressed()
