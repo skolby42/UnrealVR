@@ -5,21 +5,33 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
+#include "LightPainterSaveGameIndex.h"
+#include "Misc/Guid.h"
 #include "Stroke.h"
 
 ULightPainterSaveGame* ULightPainterSaveGame::Create()
 {
-	return Cast<ULightPainterSaveGame>(UGameplayStatics::CreateSaveGameObject(StaticClass()));
+	ULightPainterSaveGame* NewSaveGame = Cast<ULightPainterSaveGame>(UGameplayStatics::CreateSaveGameObject(StaticClass()));
+	if (NewSaveGame)
+	{
+		NewSaveGame->CurrentSlotName = FGuid::NewGuid().ToString();
+		if (!NewSaveGame->Save()) return nullptr;
+
+		ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
+		SaveGameIndex->AddSaveGame(NewSaveGame);
+		SaveGameIndex->Save();
+	}
+	return NewSaveGame;
 }
 
 bool ULightPainterSaveGame::Save()
 {
-	return UGameplayStatics::SaveGameToSlot(this, TEXT("Scott"), 0);
+	return UGameplayStatics::SaveGameToSlot(this, CurrentSlotName, 0);
 }
 
-ULightPainterSaveGame* ULightPainterSaveGame::Load()
+ULightPainterSaveGame* ULightPainterSaveGame::Load(FString CurrentSlotName)
 {
-	return Cast<ULightPainterSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("Scott"), 0));
+	return Cast<ULightPainterSaveGame>(UGameplayStatics::LoadGameFromSlot(CurrentSlotName, 0));
 }
 
 void ULightPainterSaveGame::SerializeFromWorld(UWorld* World)
@@ -48,4 +60,9 @@ void ULightPainterSaveGame::ClearWorld(UWorld* World)
 	{
 		StrokeIterator->Destroy();
 	}
+}
+
+FString ULightPainterSaveGame::GetSlotName() const
+{
+	return CurrentSlotName;
 }

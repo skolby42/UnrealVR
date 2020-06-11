@@ -23,6 +23,12 @@ void AVRPawn::BeginPlay()
 	Super::BeginPlay();
 	
 	CreateHandControllers();
+
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Create();
+	if (SaveGame)
+	{
+		CurrentSlotName = SaveGame->GetSlotName();
+	}
 }
 
 void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -58,7 +64,7 @@ void AVRPawn::CreateHandControllers()
 
 void AVRPawn::Save()
 {
-	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Create();
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(CurrentSlotName);
 	if (SaveGame)
 	{
 		SaveGame->SerializeFromWorld(GetWorld());
@@ -68,7 +74,7 @@ void AVRPawn::Save()
 
 void AVRPawn::Load()
 {
-	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load();
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(CurrentSlotName);
 	if (SaveGame)
 	{
 		SaveGame->DeserializeToWorld(GetWorld());

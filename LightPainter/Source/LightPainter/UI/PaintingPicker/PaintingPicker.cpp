@@ -10,7 +10,7 @@ APaintingPicker::APaintingPicker()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
 
 	PaintingGrid = CreateDefaultSubobject<UWidgetComponent>(TEXT("PaintingGrid"));
@@ -26,8 +26,10 @@ void APaintingPicker::BeginPlay()
 	
 	if (PaintingGrid)
 	{
-		UPaintingGrid* PaintingGridComponent = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
-		PaintingGridComponent->AddPainting();
+		UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
+		if (!PaintingGridWidget) return;
+
+		PaintingGridWidget->AddPainting();
 	}
 }
 

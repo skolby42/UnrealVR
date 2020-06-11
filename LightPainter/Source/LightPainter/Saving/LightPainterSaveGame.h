@@ -29,15 +29,18 @@ class LIGHTPAINTER_API ULightPainterSaveGame : public USaveGame
 public:
 	static ULightPainterSaveGame* Create();
 	bool Save();
-	static ULightPainterSaveGame* Load();
+	static ULightPainterSaveGame* Load(FString CurrentSlotName);
 
 	void SerializeFromWorld(UWorld* World);
 	void DeserializeToWorld(UWorld* World);
-
 	void ClearWorld(UWorld* World);
+	FString GetSlotName() const;
 
 private:
 	// State
 	UPROPERTY()
 	TArray<FStrokeState> Strokes;
+
+	UPROPERTY()
+	FString CurrentSlotName;
 };

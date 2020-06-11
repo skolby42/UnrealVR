@@ -19,6 +19,9 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere)
+	USceneComponent* Root = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* PaintingGrid = nullptr;
 
 	UPROPERTY(VisibleAnywhere)

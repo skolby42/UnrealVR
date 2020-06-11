@@ -48,4 +48,8 @@ private:
 	// Config
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AHandControllerBase> HandControllerClass;
+
+	// State
+	UPROPERTY()
+	FString CurrentSlotName;
 };
