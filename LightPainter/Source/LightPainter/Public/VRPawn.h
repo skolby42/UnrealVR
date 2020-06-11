@@ -21,8 +21,8 @@ protected:
 private:
 
 	void CreateHandControllers();
-
 	void Save();
+	void ReturnToMainMenu();
 
 	// Pass through methods
 	void TriggerPressed();

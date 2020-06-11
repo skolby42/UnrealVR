@@ -2,6 +2,7 @@
 
 
 #include "PaintingGameMode.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/StereoLayerFunctionLibrary.h"
 #include "LightPainter/Saving/LightPainterSaveGame.h"
@@ -13,9 +14,14 @@ void APaintingGameMode::InitGame(const FString& MapName, const FString& Options,
 	SlotName = UGameplayStatics::ParseOption(Options, TEXT("SlotName"));
 }
 
-bool APaintingGameMode::Save()
+void APaintingGameMode::Save()
 {
-	return false;
+	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(SlotName);
+	if (SaveGame)
+	{
+		SaveGame->SerializeFromWorld(GetWorld());
+		SaveGame->Save();
+	}
 }
 
 void APaintingGameMode::BeginPlay()

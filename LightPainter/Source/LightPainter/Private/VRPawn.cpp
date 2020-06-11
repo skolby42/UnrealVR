@@ -5,7 +5,9 @@
 #include "Engine/World.h"
 #include "HandControllerBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/StereoLayerFunctionLibrary.h"
 #include "LightPainter/Saving/LightPainterSaveGame.h"
+#include "PaintingGameMode.h"
 
 AVRPawn::AVRPawn()
 {
@@ -63,12 +65,17 @@ void AVRPawn::CreateHandControllers()
 
 void AVRPawn::Save()
 {
-	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(CurrentSlotName);
-	if (SaveGame)
-	{
-		SaveGame->SerializeFromWorld(GetWorld());
-		SaveGame->Save();
-	}	
+	auto GameMode = Cast<APaintingGameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode) return;
+
+	GameMode->Save();
+}
+
+void AVRPawn::ReturnToMainMenu()
+{
+	UStereoLayerFunctionLibrary::ShowSplashScreen();  // Workaround for bug causing hang when opening level
+	// TODO refactor magic string
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("MainMenu"));
 }
 
 void AVRPawn::TriggerPressed()
