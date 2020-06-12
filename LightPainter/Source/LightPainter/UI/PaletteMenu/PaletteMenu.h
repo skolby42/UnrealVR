@@ -24,5 +24,5 @@ protected:
 
 private:
 	UFUNCTION()
-	void ExitButtonPressed();
+	void ExitButtonReleased();
 };

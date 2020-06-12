@@ -10,12 +10,12 @@ bool UPaletteMenu::Initialize()
 	if (!Super::Initialize()) return false;
 
 	if (!ExitButton) return false;
-	ExitButton->OnPressed.AddDynamic(this, &UPaletteMenu::ExitButtonPressed);
+	ExitButton->OnReleased.AddDynamic(this, &UPaletteMenu::ExitButtonReleased);
 
 	return true;
 }
 
-void UPaletteMenu::ExitButtonPressed()
+void UPaletteMenu::ExitButtonReleased()
 {
 	auto GameMode = Cast<APaintingGameMode>(GetWorld()->GetAuthGameMode());
 	if (!GameMode) return;
