@@ -3,10 +3,12 @@
 #include "VRPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "HandControllerBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/StereoLayerFunctionLibrary.h"
 #include "PaintingGameMode.h"
+#include "LightPainter/UI/PaintingPicker/PaintingPicker.h"
 
 AVRPawn::AVRPawn()
 {
@@ -63,11 +65,11 @@ void AVRPawn::PaginateRight(float AxisValue)
 	// Latch analogue input
 	int32 PaginationOffset = 0;
 	PaginationOffset += NormalizedAxisValue > PaginationThumbstickThreshold ? 1 : 0;
-	PaginationOffset += NormalizedAxisValue > -PaginationThumbstickThreshold ? -1 : 0;
+	PaginationOffset += NormalizedAxisValue < -PaginationThumbstickThreshold ? -1 : 0;
 
 	if (PaginationOffset != LastPaginationOffset && PaginationOffset != 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Paginate: %f"), LastPaginationOffset);
+		UpdateCurrentPage(PaginationOffset);
 	}	
 
 	LastPaginationOffset = PaginationOffset;
@@ -83,4 +85,12 @@ void AVRPawn::TriggerReleased()
 {
 	if (!RightController) return;
 	RightController->TriggerReleased();
+}
+
+void AVRPawn::UpdateCurrentPage(int32 Offset)
+{
+	for (TActorIterator<APaintingPicker>PaintingPickerIter(GetWorld()); PaintingPickerIter; ++PaintingPickerIter)
+	{
+		PaintingPickerIter->UpdateCurrentPage(Offset);
+	}
 }

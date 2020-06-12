@@ -42,6 +42,12 @@ void APaintingPicker::ToggleDeleteMode()
 	
 }
 
+void APaintingPicker::UpdateCurrentPage(int32 Offset)
+{
+	CurrentPage = FMath::Clamp(CurrentPage + Offset, 0, GetNumberOfPages() - 1);
+	Refresh();
+}
+
 void APaintingPicker::LoadActionBar()
 {
 	if (!ActionBar) return;
@@ -69,10 +75,13 @@ void APaintingPicker::RefreshPaintingGrid()
 
 	GetPaintingGrid()->ClearPaintings();
 
+	int32 StartOffset = CurrentPage * GetPaintingGrid()->GetNumberOfSlots();
 	TArray<FString> SlotNames = SaveGameIndex->GetSlotNames();
-	for (int32 i = 0; i < SlotNames.Num(); ++i)
+	for (int32 i = 0; i < GetPaintingGrid()->GetNumberOfSlots(); ++i)
 	{
-		GetPaintingGrid()->AddPainting(i, SlotNames[i]);
+		int32 CurrentSlot = i + StartOffset;
+		if (CurrentSlot == SlotNames.Num()) break;
+		GetPaintingGrid()->AddPainting(i, SlotNames[CurrentSlot]);
 	}
 }
 

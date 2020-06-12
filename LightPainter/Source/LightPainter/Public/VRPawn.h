@@ -29,6 +29,8 @@ private:
 
 private:
 
+	void UpdateCurrentPage(int32 Offset);
+
 	// Components
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* VRRoot;
