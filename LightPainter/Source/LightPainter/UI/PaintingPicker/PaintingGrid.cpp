@@ -4,7 +4,9 @@
 #include "PaintingGrid.h"
 #include "Components/SizeBox.h"
 #include "Components/UniformGridPanel.h"
+#include "Components/HorizontalBox.h"
 #include "PaintingGridCard.h"
+#include "PaginationDot.h"
 
 
 void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName)

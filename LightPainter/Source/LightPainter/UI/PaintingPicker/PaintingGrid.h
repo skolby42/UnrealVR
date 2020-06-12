@@ -22,7 +22,13 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
 	class UUniformGridPanel* PaintingGrid;
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
+	class UHorizontalBox* PaginationDots;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class UPaintingGridCard> GridCardClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UPaginationDot> PaginationDotClass;
 };
