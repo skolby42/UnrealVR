@@ -35,6 +35,7 @@ void APaintingPicker::AddPainting()
 {
 	ULightPainterSaveGame::Create();
 	LoadPaintingGrid();
+	LoadPaginationDots();
 }
 
 void APaintingPicker::ToggleDeleteMode()
@@ -69,5 +70,16 @@ void APaintingPicker::LoadPaintingGrid()
 	{
 		PaintingGridWidget->AddPainting(i, SlotNames[i]);
 	}
+}
+
+void APaintingPicker::LoadPaginationDots()
+{
+	UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
+	if (!PaintingGridWidget) return;
+
+	PaintingGridWidget->ClearPaginationDots();
+	PaintingGridWidget->AddPaginationDot(true);
+	PaintingGridWidget->AddPaginationDot(false);
+	PaintingGridWidget->AddPaginationDot(false);
 }
 

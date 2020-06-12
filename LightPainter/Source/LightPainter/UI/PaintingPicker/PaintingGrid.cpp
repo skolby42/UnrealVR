@@ -35,3 +35,20 @@ void UPaintingGrid::ClearPaintings()
 		CardContainer->ClearChildren();
 	}
 }
+
+void UPaintingGrid::AddPaginationDot(bool bIsActive)
+{
+	if (!PaginationDots) return;
+
+	UPaginationDot* PaginationDotWidget = CreateWidget<UPaginationDot>(GetWorld(), PaginationDotClass);
+	if (!PaginationDotWidget) return;
+	PaginationDotWidget->SetPadding(FMargin(8.f, 0.f));
+
+	PaginationDots->AddChild(PaginationDotWidget);
+}
+
+void UPaintingGrid::ClearPaginationDots()
+{
+	if (!PaginationDots) return;
+	PaginationDots->ClearChildren();
+}

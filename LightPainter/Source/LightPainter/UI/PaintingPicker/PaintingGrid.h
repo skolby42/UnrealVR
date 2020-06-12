@@ -17,6 +17,8 @@ class LIGHTPAINTER_API UPaintingGrid : public UUserWidget
 public:
 	void AddPainting(int32 PaintingIndex, FString PaintingName);
 	void ClearPaintings();
+	void AddPaginationDot(bool bIsActive);
+	void ClearPaginationDots();
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))

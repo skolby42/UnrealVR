@@ -22,6 +22,7 @@ protected:
 private:
 	void LoadActionBar();
 	void LoadPaintingGrid();
+	void LoadPaginationDots();
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;
