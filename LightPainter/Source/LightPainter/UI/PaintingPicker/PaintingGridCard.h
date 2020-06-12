@@ -18,10 +18,11 @@ class LIGHTPAINTER_API UPaintingGridCard : public UUserWidget
 
 public:
 	void SetPaintingName(FString NewPaintingName);
+	void SetDisplayName(FString NewDisplayName);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
-	UTextBlock* SlotName;
+	UTextBlock* DisplayName;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
 	UButton* CardButton;

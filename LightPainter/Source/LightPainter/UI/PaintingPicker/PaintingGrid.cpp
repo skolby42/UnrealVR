@@ -10,13 +10,14 @@
 #include "PaginationDot.h"
 
 
-void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName)
+void UPaintingGrid::AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName)
 {
 	if (!PaintingGrid) return;
 
 	UPaintingGridCard* PaintingGridCardWidget = CreateWidget<UPaintingGridCard>(GetWorld(), GridCardClass);
 	if (!PaintingGridCardWidget) return;
 	PaintingGridCardWidget->SetPaintingName(PaintingName);
+	PaintingGridCardWidget->SetDisplayName(DisplayName);
 	
 	USizeBox* CardContainer = Cast<USizeBox>(PaintingGrid->GetChildAt(PaintingIndex));
 	if (!CardContainer) return;

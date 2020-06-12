@@ -81,7 +81,7 @@ void APaintingPicker::RefreshPaintingGrid()
 	{
 		int32 CurrentSlot = i + StartOffset;
 		if (CurrentSlot == SlotNames.Num()) break;
-		GetPaintingGrid()->AddPainting(i, SlotNames[CurrentSlot]);
+		GetPaintingGrid()->AddPainting(i, SlotNames[CurrentSlot], FString::FromInt(CurrentSlot + 1));
 	}
 }
 

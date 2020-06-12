@@ -8,9 +8,12 @@
 void UPaintingGridCard::SetPaintingName(FString NewPaintingName)
 {
 	PaintingName = NewPaintingName;
-	SlotName->SetText(FText::FromString(NewPaintingName));
-
 	CardButton->OnClicked.AddDynamic(this, &UPaintingGridCard::CardButtonClicked);
+}
+
+void UPaintingGridCard::SetDisplayName(FString NewDisplayName)
+{
+	DisplayName->SetText(FText::FromString(NewDisplayName));
 }
 
 void UPaintingGridCard::CardButtonClicked()

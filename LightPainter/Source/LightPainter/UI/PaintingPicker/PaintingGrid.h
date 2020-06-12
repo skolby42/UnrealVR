@@ -15,7 +15,7 @@ class LIGHTPAINTER_API UPaintingGrid : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void AddPainting(int32 PaintingIndex, FString PaintingName);
+	void AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName);
 	void ClearPaintings();
 	void AddPaginationDot(bool bActive);
 	void ClearPaginationDots();
