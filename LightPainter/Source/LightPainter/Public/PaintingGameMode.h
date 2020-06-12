@@ -19,10 +19,15 @@ public:
 	void Save();
 	void Load();
 
+	UFUNCTION()
+	void SaveAndExitLevel();
+
 protected:
 	void BeginPlay() override;
 	
 private:
+	void ReturnToMainMenu();
+
 	// State
 	FString SlotName;
 };

@@ -32,6 +32,12 @@ void APaintingGameMode::BeginPlay()
 	UStereoLayerFunctionLibrary::HideSplashScreen();
 }
 
+void APaintingGameMode::SaveAndExitLevel()
+{
+	Save();
+	ReturnToMainMenu();
+}
+
 void APaintingGameMode::Load()
 {
 	ULightPainterSaveGame* SaveGame = ULightPainterSaveGame::Load(SlotName);
@@ -43,4 +49,10 @@ void APaintingGameMode::Load()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Save game %s not loaded"), *SlotName)
 	}
+}
+
+void APaintingGameMode::ReturnToMainMenu()
+{
+	UStereoLayerFunctionLibrary::ShowSplashScreen();  // Workaround for bug causing hang when opening level
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("MainMenu"));
 }

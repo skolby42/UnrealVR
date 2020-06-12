@@ -32,8 +32,6 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Pressed, this, &AVRPawn::TriggerPressed);
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::TriggerReleased);
-
-	PlayerInputComponent->BindAction(TEXT("Save"), EInputEvent::IE_Released, this, &AVRPawn::Save);
 }
 
 void AVRPawn::CreateHandControllers()
@@ -54,21 +52,6 @@ void AVRPawn::CreateHandControllers()
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
-}
-
-void AVRPawn::Save()
-{
-	auto GameMode = Cast<APaintingGameMode>(GetWorld()->GetAuthGameMode());
-	if (!GameMode) return;
-
-	GameMode->Save();
-	ReturnToMainMenu();
-}
-
-void AVRPawn::ReturnToMainMenu()
-{
-	UStereoLayerFunctionLibrary::ShowSplashScreen();  // Workaround for bug causing hang when opening level
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("MainMenu"));
 }
 
 void AVRPawn::TriggerPressed()
