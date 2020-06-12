@@ -5,6 +5,7 @@
 #include "Components/SizeBox.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "PaintingGridCard.h"
 #include "PaginationDot.h"
 
@@ -36,19 +37,27 @@ void UPaintingGrid::ClearPaintings()
 	}
 }
 
-void UPaintingGrid::AddPaginationDot(bool bIsActive)
+void UPaintingGrid::AddPaginationDot(bool bActive)
 {
 	if (!PaginationDots) return;
 
 	UPaginationDot* PaginationDotWidget = CreateWidget<UPaginationDot>(GetWorld(), PaginationDotClass);
 	if (!PaginationDotWidget) return;
-	PaginationDotWidget->SetPadding(FMargin(8.f, 0.f));
+	PaginationDotWidget->SetActive(bActive);
 
-	PaginationDots->AddChild(PaginationDotWidget);
+	UHorizontalBoxSlot* HorizontalBoxSlot = PaginationDots->AddChildToHorizontalBox(PaginationDotWidget);
+	if (!HorizontalBoxSlot) return;
+	HorizontalBoxSlot->SetPadding(FMargin(PaginationDotPadding, 0.f));
 }
 
 void UPaintingGrid::ClearPaginationDots()
 {
 	if (!PaginationDots) return;
 	PaginationDots->ClearChildren();
+}
+
+int32 UPaintingGrid::GetNumberOfSlots() const
+{
+	if (!PaintingGrid) return 0;
+	return PaintingGrid->GetChildrenCount();
 }

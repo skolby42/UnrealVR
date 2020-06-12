@@ -21,6 +21,7 @@ protected:
 private:
 
 	void CreateHandControllers();
+	void PaginateRight(float AxisValue);
 
 	// Pass through methods
 	void TriggerPressed();
@@ -48,4 +49,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AHandControllerBase> RightHandControllerClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	float PaginationThumbstickThreshold = 0.8f;
+
+	// State
+	int32 LastPaginationOffset = 0;
 };

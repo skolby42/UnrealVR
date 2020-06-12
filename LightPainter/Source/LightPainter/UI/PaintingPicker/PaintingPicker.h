@@ -21,9 +21,13 @@ protected:
 	
 private:
 	void LoadActionBar();
-	void LoadPaintingGrid();
-	void LoadPaginationDots();
+	void Refresh();
+	void RefreshPaintingGrid();
+	void RefreshPaginationDots();
+	int32 GetNumberOfPages() const;
+	class UPaintingGrid* GetPaintingGrid() const;
 
+	// Components
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;
 
@@ -32,4 +36,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* ActionBar = nullptr;
+
+	// State
+	int32 CurrentPage = 0;
 };

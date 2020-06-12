@@ -28,14 +28,13 @@ void APaintingPicker::BeginPlay()
 	Super::BeginPlay();
 	
 	LoadActionBar();
-	LoadPaintingGrid();
+	Refresh();
 }
 
 void APaintingPicker::AddPainting()
 {
 	ULightPainterSaveGame::Create();
-	LoadPaintingGrid();
-	LoadPaginationDots();
+	Refresh();
 }
 
 void APaintingPicker::ToggleDeleteMode()
@@ -53,33 +52,66 @@ void APaintingPicker::LoadActionBar()
 	ActionBarWidget->SetParentPicker(this);
 }
 
-void APaintingPicker::LoadPaintingGrid()
+void APaintingPicker::Refresh()
+{
+	RefreshPaginationDots();
+	RefreshPaintingGrid();
+}
+
+void APaintingPicker::RefreshPaintingGrid()
 {
 	if (!PaintingGrid) return;
 
 	ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
 	if (!SaveGameIndex) return;
 
-	UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
-	if (!PaintingGridWidget) return;
+	if (!GetPaintingGrid()) return;
 
-	PaintingGridWidget->ClearPaintings();
+	GetPaintingGrid()->ClearPaintings();
 
 	TArray<FString> SlotNames = SaveGameIndex->GetSlotNames();
 	for (int32 i = 0; i < SlotNames.Num(); ++i)
 	{
-		PaintingGridWidget->AddPainting(i, SlotNames[i]);
+		GetPaintingGrid()->AddPainting(i, SlotNames[i]);
 	}
 }
 
-void APaintingPicker::LoadPaginationDots()
+void APaintingPicker::RefreshPaginationDots()
 {
-	UPaintingGrid* PaintingGridWidget = Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
-	if (!PaintingGridWidget) return;
+	if (!GetPaintingGrid()) return;
 
-	PaintingGridWidget->ClearPaginationDots();
-	PaintingGridWidget->AddPaginationDot(true);
-	PaintingGridWidget->AddPaginationDot(false);
-	PaintingGridWidget->AddPaginationDot(false);
+	GetPaintingGrid()->ClearPaginationDots();
+
+	for (int32 i = 0; i < GetNumberOfPages(); ++i)
+	{
+		bool bActive = i == CurrentPage;
+		GetPaintingGrid()->AddPaginationDot(bActive);
+	}
+}
+
+int32 APaintingPicker::GetNumberOfPages() const
+{
+	if (!PaintingGrid) return 0;
+
+	if (!GetPaintingGrid()) return 0;
+
+	ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
+	if (!SaveGameIndex) return 0;
+
+	int32 TotalSlots = SaveGameIndex->GetSlotNames().Num();
+	int32 SlotsPerPage = GetPaintingGrid()->GetNumberOfSlots();
+
+	if (TotalSlots == 0)
+		TotalSlots = 1;
+
+	if (SlotsPerPage == 0) 
+		SlotsPerPage = 1;
+
+	return FMath::RoundFromZero(float(TotalSlots) / (float)SlotsPerPage);
+}
+
+UPaintingGrid* APaintingPicker::GetPaintingGrid() const
+{
+	return Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
 }
 

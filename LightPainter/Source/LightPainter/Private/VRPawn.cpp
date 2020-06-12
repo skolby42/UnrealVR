@@ -32,6 +32,8 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Pressed, this, &AVRPawn::TriggerPressed);
 	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::TriggerReleased);
+
+	PlayerInputComponent->BindAxis(TEXT("PaginateRight"), this, &AVRPawn::PaginateRight);
 }
 
 void AVRPawn::CreateHandControllers()
@@ -52,6 +54,23 @@ void AVRPawn::CreateHandControllers()
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
+}
+
+void AVRPawn::PaginateRight(float AxisValue)
+{
+	float NormalizedAxisValue = FMath::Clamp<float>(AxisValue, -1, 1);
+
+	// Latch analogue input
+	int32 PaginationOffset = 0;
+	PaginationOffset += NormalizedAxisValue > PaginationThumbstickThreshold ? 1 : 0;
+	PaginationOffset += NormalizedAxisValue > -PaginationThumbstickThreshold ? -1 : 0;
+
+	if (PaginationOffset != LastPaginationOffset && PaginationOffset != 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Paginate: %f"), LastPaginationOffset);
+	}	
+
+	LastPaginationOffset = PaginationOffset;
 }
 
 void AVRPawn::TriggerPressed()
