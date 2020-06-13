@@ -2,6 +2,7 @@
 
 
 #include "PaintingGrid.h"
+#include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/HorizontalBox.h"

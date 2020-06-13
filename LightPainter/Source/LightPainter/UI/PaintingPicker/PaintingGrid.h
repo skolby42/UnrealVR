@@ -26,6 +26,9 @@ protected:
 	class UUniformGridPanel* PaintingGrid;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
+	class UImage* BackgroundImage;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
 	class UHorizontalBox* PaginationDots;
 
 private:
