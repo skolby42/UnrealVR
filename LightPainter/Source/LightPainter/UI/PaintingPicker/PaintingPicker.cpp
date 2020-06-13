@@ -39,7 +39,9 @@ void APaintingPicker::AddPainting()
 
 void APaintingPicker::ToggleDeleteMode()
 {
-	
+	if (!PaintingGrid) return;
+	DeleteModeActive = !DeleteModeActive;
+	GetPaintingGrid()->SetBackgroundColor(DeleteModeActive);
 }
 
 void APaintingPicker::UpdateCurrentPage(int32 Offset)

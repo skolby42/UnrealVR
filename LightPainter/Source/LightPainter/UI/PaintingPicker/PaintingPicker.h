@@ -40,4 +40,5 @@ private:
 
 	// State
 	int32 CurrentPage = 0;
+	bool DeleteModeActive = false;
 };

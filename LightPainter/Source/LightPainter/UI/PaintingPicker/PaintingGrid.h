@@ -17,9 +17,10 @@ class LIGHTPAINTER_API UPaintingGrid : public UUserWidget
 public:
 	void AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName);
 	void ClearPaintings();
-	void AddPaginationDot(bool bActive);
+	void AddPaginationDot(bool Active);
 	void ClearPaginationDots();
 	int32 GetNumberOfSlots() const;
+	void SetBackgroundColor(bool DeleteModeActive);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
@@ -40,4 +41,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float PaginationDotPadding = 8.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	FLinearColor DefaultBackgroundColor;
+
+	UPROPERTY(EditDefaultsOnly)
+	FLinearColor DeleteModeBackgroundColor;
 };

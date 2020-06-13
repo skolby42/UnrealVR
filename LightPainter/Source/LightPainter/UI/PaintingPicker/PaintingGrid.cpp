@@ -39,13 +39,13 @@ void UPaintingGrid::ClearPaintings()
 	}
 }
 
-void UPaintingGrid::AddPaginationDot(bool bActive)
+void UPaintingGrid::AddPaginationDot(bool Active)
 {
 	if (!PaginationDots) return;
 
 	UPaginationDot* PaginationDotWidget = CreateWidget<UPaginationDot>(GetWorld(), PaginationDotClass);
 	if (!PaginationDotWidget) return;
-	PaginationDotWidget->SetActive(bActive);
+	PaginationDotWidget->SetActive(Active);
 
 	UHorizontalBoxSlot* HorizontalBoxSlot = PaginationDots->AddChildToHorizontalBox(PaginationDotWidget);
 	if (!HorizontalBoxSlot) return;
@@ -62,4 +62,12 @@ int32 UPaintingGrid::GetNumberOfSlots() const
 {
 	if (!PaintingGrid) return 0;
 	return PaintingGrid->GetChildrenCount();
+}
+
+void UPaintingGrid::SetBackgroundColor(bool DeleteModeActive)
+{
+	if (!BackgroundImage) return;
+
+	FLinearColor Color = DeleteModeActive ? DeleteModeBackgroundColor : DefaultBackgroundColor;
+	BackgroundImage->SetColorAndOpacity(Color);
 }
