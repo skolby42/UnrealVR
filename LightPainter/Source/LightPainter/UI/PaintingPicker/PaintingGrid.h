@@ -15,12 +15,17 @@ class LIGHTPAINTER_API UPaintingGrid : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	bool Initialize() override;
+	void Refresh();
+	
 	void AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName);
 	void ClearPaintings();
 	void AddPaginationDot(bool Active);
 	void ClearPaginationDots();
 	int32 GetNumberOfSlots() const;
-	void SetBackgroundColor(bool DeleteModeActive);
+	void ToggleDeleteMode();
+	bool GetDeleteModeActive();
+	void UpdateCurrentPage(int32 NewPage);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
@@ -33,6 +38,11 @@ protected:
 	class UHorizontalBox* PaginationDots;
 
 private:
+	void RefreshPaintingGrid();
+	void RefreshPaginationDots();
+	int32 GetNumberOfPages() const;
+	void SetBackgroundColor();
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class UPaintingGridCard> GridCardClass;
 
@@ -43,8 +53,12 @@ private:
 	float PaginationDotPadding = 8.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	FLinearColor DefaultBackgroundColor;
+	FLinearColor DefaultBackgroundColor = FLinearColor(0.07, 0.07, 0.07, 0.75);
 
 	UPROPERTY(EditDefaultsOnly)
-	FLinearColor DeleteModeBackgroundColor;
+	FLinearColor DeleteModeBackgroundColor = FLinearColor(0.7, 0, 0, 0.75);
+
+	// State
+	bool DeleteModeActive = false;
+	int32 CurrentPage = 0;
 };

@@ -23,9 +23,6 @@ protected:
 private:
 	void LoadActionBar();
 	void Refresh();
-	void RefreshPaintingGrid();
-	void RefreshPaginationDots();
-	int32 GetNumberOfPages() const;
 	class UPaintingGrid* GetPaintingGrid() const;
 
 	// Components
@@ -37,8 +34,4 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* ActionBar = nullptr;
-
-	// State
-	int32 CurrentPage = 0;
-	bool DeleteModeActive = false;
 };

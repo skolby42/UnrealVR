@@ -39,15 +39,14 @@ void APaintingPicker::AddPainting()
 
 void APaintingPicker::ToggleDeleteMode()
 {
-	if (!PaintingGrid) return;
-	DeleteModeActive = !DeleteModeActive;
-	GetPaintingGrid()->SetBackgroundColor(DeleteModeActive);
+	if (!GetPaintingGrid()) return;
+	GetPaintingGrid()->ToggleDeleteMode();
 }
 
 void APaintingPicker::UpdateCurrentPage(int32 Offset)
 {
-	CurrentPage = FMath::Clamp(CurrentPage + Offset, 0, GetNumberOfPages() - 1);
-	Refresh();
+	if (!GetPaintingGrid()) return;
+	GetPaintingGrid()->UpdateCurrentPage(Offset);
 }
 
 void APaintingPicker::LoadActionBar()
@@ -62,67 +61,14 @@ void APaintingPicker::LoadActionBar()
 
 void APaintingPicker::Refresh()
 {
-	RefreshPaginationDots();
-	RefreshPaintingGrid();
-}
-
-void APaintingPicker::RefreshPaintingGrid()
-{
-	if (!PaintingGrid) return;
-
-	ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
-	if (!SaveGameIndex) return;
-
 	if (!GetPaintingGrid()) return;
 
-	GetPaintingGrid()->ClearPaintings();
-
-	int32 StartOffset = CurrentPage * GetPaintingGrid()->GetNumberOfSlots();
-	TArray<FString> SlotNames = SaveGameIndex->GetSlotNames();
-	for (int32 i = 0; i < GetPaintingGrid()->GetNumberOfSlots(); ++i)
-	{
-		int32 CurrentSlot = i + StartOffset;
-		if (CurrentSlot == SlotNames.Num()) break;
-		GetPaintingGrid()->AddPainting(i, SlotNames[CurrentSlot], FString::FromInt(CurrentSlot + 1));
-	}
-}
-
-void APaintingPicker::RefreshPaginationDots()
-{
-	if (!GetPaintingGrid()) return;
-
-	GetPaintingGrid()->ClearPaginationDots();
-
-	for (int32 i = 0; i < GetNumberOfPages(); ++i)
-	{
-		bool bActive = i == CurrentPage;
-		GetPaintingGrid()->AddPaginationDot(bActive);
-	}
-}
-
-int32 APaintingPicker::GetNumberOfPages() const
-{
-	if (!PaintingGrid) return 0;
-
-	if (!GetPaintingGrid()) return 0;
-
-	ULightPainterSaveGameIndex* SaveGameIndex = ULightPainterSaveGameIndex::Load();
-	if (!SaveGameIndex) return 0;
-
-	int32 TotalSlots = SaveGameIndex->GetSlotNames().Num();
-	int32 SlotsPerPage = GetPaintingGrid()->GetNumberOfSlots();
-
-	if (TotalSlots == 0)
-		TotalSlots = 1;
-
-	if (SlotsPerPage == 0) 
-		SlotsPerPage = 1;
-
-	return FMath::RoundFromZero(float(TotalSlots) / (float)SlotsPerPage);
+	GetPaintingGrid()->Refresh();
 }
 
 UPaintingGrid* APaintingPicker::GetPaintingGrid() const
 {
+	if (!PaintingGrid) return nullptr;
 	return Cast<UPaintingGrid>(PaintingGrid->GetUserWidgetObject());
 }
 

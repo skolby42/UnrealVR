@@ -20,6 +20,7 @@ public:
 	static ULightPainterSaveGameIndex* Load();
 	bool Save();
 	void AddSaveGame(ULightPainterSaveGame* SaveGame);
+	void RemoveSlot(FString SlotName);
 	TArray<FString> GetSlotNames() const;
 
 private:

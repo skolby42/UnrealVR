@@ -8,6 +8,8 @@
 #include "Components/TextBlock.h"
 #include "PaintingGridCard.generated.h"
 
+class UPaintingGrid;
+
 /**
  * 
  */
@@ -19,6 +21,7 @@ class LIGHTPAINTER_API UPaintingGridCard : public UUserWidget
 public:
 	void SetPaintingName(FString NewPaintingName);
 	void SetDisplayName(FString NewDisplayName);
+	void SetParentGrid(UPaintingGrid* NewParentGrid);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
@@ -31,6 +34,13 @@ private:
 	UFUNCTION()
 	void CardButtonClicked();
 
+	void OpenPainting();
+	void DeletePainting();
+
+	UPROPERTY()
+	UPaintingGrid* ParentGrid;
+
 	// State
 	FString PaintingName;
+	
 };

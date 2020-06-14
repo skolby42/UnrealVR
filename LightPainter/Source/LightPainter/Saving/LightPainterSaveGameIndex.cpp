@@ -32,6 +32,12 @@ void ULightPainterSaveGameIndex::AddSaveGame(ULightPainterSaveGame* SaveGame)
 	Save();
 }
 
+void ULightPainterSaveGameIndex::RemoveSlot(FString SlotName)
+{
+	SlotNames.Remove(SlotName);
+	Save();
+}
+
 TArray<FString> ULightPainterSaveGameIndex::GetSlotNames() const
 {
 	return SlotNames;
