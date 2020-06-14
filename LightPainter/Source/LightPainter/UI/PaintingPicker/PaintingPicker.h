@@ -15,6 +15,7 @@ public:
 	APaintingPicker();
 	void AddPainting();
 	void ToggleDeleteMode();
+	bool GetDeleteModeActive();
 	void UpdateCurrentPage(int32 Offset);
 
 protected:

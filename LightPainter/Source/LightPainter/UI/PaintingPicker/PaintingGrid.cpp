@@ -16,7 +16,7 @@ bool UPaintingGrid::Initialize()
 {
 	if (!Super::Initialize()) return false;
 
-	SetBackgroundColor();
+	UpdateBackgroundColor();
 	return true;
 }
 
@@ -47,7 +47,10 @@ void UPaintingGrid::RefreshPaginationDots()
 {
 	ClearPaginationDots();
 
-	for (int32 i = 0; i < GetNumberOfPages(); ++i)
+	int32 NumberOfPages = GetNumberOfPages();
+	CurrentPage = FMath::Clamp(CurrentPage, 0, NumberOfPages - 1);
+
+	for (int32 i = 0; i < NumberOfPages; ++i)
 	{
 		bool bActive = i == CurrentPage;
 		AddPaginationDot(bActive);
@@ -130,7 +133,7 @@ int32 UPaintingGrid::GetNumberOfSlots() const
 void UPaintingGrid::ToggleDeleteMode()
 {
 	DeleteModeActive = !DeleteModeActive;
-	SetBackgroundColor();
+	UpdateBackgroundColor();
 }
 
 bool UPaintingGrid::GetDeleteModeActive()
@@ -144,7 +147,7 @@ void UPaintingGrid::UpdateCurrentPage(int32 Offset)
 	Refresh();
 }
 
-void UPaintingGrid::SetBackgroundColor()
+void UPaintingGrid::UpdateBackgroundColor()
 {
 	if (!BackgroundImage) return;
 

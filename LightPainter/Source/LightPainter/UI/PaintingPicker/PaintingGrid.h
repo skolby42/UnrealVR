@@ -17,15 +17,9 @@ class LIGHTPAINTER_API UPaintingGrid : public UUserWidget
 public:
 	bool Initialize() override;
 	void Refresh();
-	
-	void AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName);
-	void ClearPaintings();
-	void AddPaginationDot(bool Active);
-	void ClearPaginationDots();
-	int32 GetNumberOfSlots() const;
 	void ToggleDeleteMode();
 	bool GetDeleteModeActive();
-	void UpdateCurrentPage(int32 NewPage);
+	void UpdateCurrentPage(int32 Offset);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
@@ -41,7 +35,12 @@ private:
 	void RefreshPaintingGrid();
 	void RefreshPaginationDots();
 	int32 GetNumberOfPages() const;
-	void SetBackgroundColor();
+	void UpdateBackgroundColor();
+	void AddPainting(int32 PaintingIndex, FString PaintingName, FString DisplayName);
+	void ClearPaintings();
+	void AddPaginationDot(bool Active);
+	void ClearPaginationDots();
+	int32 GetNumberOfSlots() const;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class UPaintingGridCard> GridCardClass;

@@ -29,6 +29,10 @@ void UActionBar::SetParentPicker(APaintingPicker* NewParentPicker)
 void UActionBar::AddButtonClicked()
 {
 	if (!ParentPicker) return;
+
+	if (ParentPicker->GetDeleteModeActive())
+		ParentPicker->ToggleDeleteMode();
+
 	ParentPicker->AddPainting();
 }
 

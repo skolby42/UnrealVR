@@ -8,7 +8,7 @@
 #include "PaintingGrid.h"
 #include "ActionBar.h"
 
-// Sets default values
+
 APaintingPicker::APaintingPicker()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -43,6 +43,12 @@ void APaintingPicker::ToggleDeleteMode()
 	GetPaintingGrid()->ToggleDeleteMode();
 }
 
+bool APaintingPicker::GetDeleteModeActive()
+{
+	if (!GetPaintingGrid()) return false;
+	return GetPaintingGrid()->GetDeleteModeActive();
+}
+
 void APaintingPicker::UpdateCurrentPage(int32 Offset)
 {
 	if (!GetPaintingGrid()) return;
@@ -62,7 +68,6 @@ void APaintingPicker::LoadActionBar()
 void APaintingPicker::Refresh()
 {
 	if (!GetPaintingGrid()) return;
-
 	GetPaintingGrid()->Refresh();
 }
 
