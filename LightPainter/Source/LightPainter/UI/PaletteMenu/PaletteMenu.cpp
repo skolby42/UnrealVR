@@ -35,6 +35,5 @@ void UPaletteMenu::ExitButtonReleased()
 void UPaletteMenu::DeleteButtonReleased()
 {
 	if (!ParentController) return;
-	UE_LOG(LogTemp, Warning, TEXT("DeleteButtonReleased"))
 	ParentController->ToggleDelete();
 }
