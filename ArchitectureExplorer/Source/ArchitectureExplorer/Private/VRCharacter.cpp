@@ -104,6 +104,7 @@ void AVRCharacter::CreateHandControllers()
 	{
 		LeftController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
 		LeftController->SetHand(EControllerHand::Left);
+		LeftController->SetControllerMeshVisibility(false);
 		LeftController->SetOwner(this);  // Fix for 4.22+
 	}
 
@@ -112,6 +113,7 @@ void AVRCharacter::CreateHandControllers()
 	{
 		RightController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
 		RightController->SetHand(EControllerHand::Right);
+		RightController->SetControllerMeshVisibility(false);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
 

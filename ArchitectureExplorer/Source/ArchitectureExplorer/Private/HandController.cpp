@@ -3,9 +3,11 @@
 
 #include "HandController.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "HandAnimInstance.h"
 #include "Haptics/HapticFeedbackEffect_Curve.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
@@ -26,6 +28,16 @@ AHandController::AHandController()
 
 	ControllerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControllerMesh"));
 	ControllerMesh->SetupAttachment(MotionController);
+
+	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
+	SkeletalMesh->SetWorldRotation(FRotator(30.f, 0.f, 90.f));
+	SkeletalMesh->SetWorldLocation(FVector(-9.f, 0.5f, -5.f));
+	if (HandAnimClass)
+	{
+		SkeletalMesh->SetAnimClass(HandAnimClass);
+		SkeletalMesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	}
+	SkeletalMesh->SetupAttachment(MotionController);
 
 	PickupHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PickupHandle"));
 
@@ -56,11 +68,30 @@ void AHandController::Tick(float DeltaTime)
 	UpdateCarry();
 }
 
-void AHandController::SetHand(EControllerHand ControllerHand)
+void AHandController::SetHand(EControllerHand Hand)
 {
 	if (!MotionController) return;
-	MotionController->SetTrackingSource(ControllerHand);
-	UpdateControllerMesh(ControllerHand);
+	MotionController->SetTrackingSource(Hand);
+	UpdateControllerMesh(Hand);
+	UpdateSkeletalMesh(Hand);
+}
+
+void AHandController::UpdateSkeletalMesh(EControllerHand Hand)
+{
+	if (Hand != EControllerHand::Left || !SkeletalMesh) return;
+	SkeletalMesh->SetWorldScale3D(FVector(1.f, 1.f, -1.f));  // Invert scale for left hand
+}
+
+void AHandController::SetControllerMeshVisibility(bool IsVisible)
+{
+	if (!ControllerMesh) return;
+	ControllerMesh->SetVisibility(IsVisible);
+}
+
+void AHandController::SetSkeletalMeshVisibility(bool IsVisible)
+{
+	if (!SkeletalMesh) return;
+	SkeletalMesh->SetVisibility(IsVisible);
 }
 
 void AHandController::PairController(AHandController* OtherController)
@@ -117,12 +148,14 @@ void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 	if (!bCanClimb && CanClimb())
 	{
 		bCanClimb = true;
+		UpdateCanGrabAnim(true);
 		ControllerRumble();
 	}
 
 	if (!bCanCarry && CanCarry())
 	{
 		bCanCarry = true;
+		UpdateCanGrabAnim(true);
 		ControllerRumble();
 	}
 }
@@ -131,6 +164,11 @@ void AHandController::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActo
 {
 	bCanClimb = CanClimb();
 	bCanCarry = CanCarry();
+
+	if (!bCanClimb && !bCanCarry)
+	{
+		UpdateCanGrabAnim(false);
+	}
 }
 
 bool AHandController::CanClimb() const
@@ -170,6 +208,12 @@ AActor* AHandController::GetOverlappingActorWithTag(const FName& Tag) const
 	return nullptr;
 }
 
+UHandAnimInstance* AHandController::GetHandAnimInstance() const
+{
+	if (!SkeletalMesh) return nullptr;
+	return Cast<UHandAnimInstance>(SkeletalMesh->GetAnimInstance());
+}
+
 void AHandController::UpdateCarry()
 {
 	if (PickupLocation)
@@ -191,12 +235,30 @@ void AHandController::ControllerRumble() const
 
 void AHandController::Grip()
 {
+	UpdateGripHeldAnim(true);
 	StartClimb();
 	StartCarry();
 }
 
+void AHandController::UpdateGripHeldAnim(bool GripHeld)
+{
+	UHandAnimInstance* HandAnimInstance = GetHandAnimInstance();
+	if (!HandAnimInstance) return;
+
+	HandAnimInstance->SetGripHeld(GripHeld);
+}
+
+void AHandController::UpdateCanGrabAnim(bool CanGrab)
+{
+	UHandAnimInstance* HandAnimInstance = GetHandAnimInstance();
+	if (!HandAnimInstance) return;
+	
+	HandAnimInstance->SetCanGrab(CanGrab);
+}
+
 void AHandController::Release()
 {
+	UpdateGripHeldAnim(false);
 	FinishClimb();
 	FinishCarry();
 }

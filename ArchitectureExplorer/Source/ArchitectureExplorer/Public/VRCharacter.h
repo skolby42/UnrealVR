@@ -7,6 +7,7 @@
 #include "VRCharacter.generated.h"
 
 class AHandController;
+class UAnimInstance;
 class UCameraComponent;
 class UPostProcessComponent;
 class USplineComponent;

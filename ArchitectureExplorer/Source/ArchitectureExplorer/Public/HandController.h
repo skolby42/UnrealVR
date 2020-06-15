@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "HandController.generated.h"
 
+class UHandAnimInstance;
 class UHapticFeedbackEffect_Curve;
 class UMotionControllerComponent;
 class UPhysicsHandleComponent;
@@ -47,6 +48,9 @@ public:
 	void FinishCarry();
 	void FinishClimb();
 	float GetThumbDeadZone();
+	void UpdateSkeletalMesh(EControllerHand Hand);
+	void SetControllerMeshVisibility(bool IsVisible);
+	void SetSkeletalMeshVisibility(bool IsVisible);
 
 private:
 	// Callbacks
@@ -55,9 +59,23 @@ private:
 	UFUNCTION()
 	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
+	// Helpers
+	void ControllerRumble() const;
+	AActor* GetOverlappingActorWithTag(const FName& Tag) const;
+	UHandAnimInstance* GetHandAnimInstance() const;
+	bool CanClimb() const;
+	void UpdateClimb();
+	bool CanCarry() const;
+	void UpdateCarry();
+	void UpdateGripHeldAnim(bool GripHeld);
+	void UpdateCanGrabAnim(bool CanGrab);
+
 	// Default sub object
 	UPROPERTY(VisibleAnywhere)
 	UMotionControllerComponent* MotionController = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* SkeletalMesh = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ControllerMesh = nullptr;
@@ -83,13 +101,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
 	float TeleportSimulationTime = 1.f;
 
-	// Helpers
-	void ControllerRumble() const;
-	AActor* GetOverlappingActorWithTag(const FName& Tag) const;
-	bool CanClimb() const;
-	void UpdateClimb();
-	bool CanCarry() const;
-	void UpdateCarry();
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UHandAnimInstance> HandAnimClass = nullptr;
 
 	//State
 	bool bCanClimb = false;
