@@ -14,16 +14,12 @@ AUIPointerHandController::AUIPointerHandController()
 
 void AUIPointerHandController::TriggerPressed()
 {
-	if (Pointer)
-	{
-		Pointer->PressPointerKey(EKeys::LeftMouseButton);
-	}
+	if (!Pointer) return;
+	Pointer->PressPointerKey(EKeys::LeftMouseButton);
 }
 
 void AUIPointerHandController::TriggerReleased()
 {
-	if (Pointer)
-	{
-		Pointer->ReleasePointerKey(EKeys::LeftMouseButton);
-	}
+	if (!Pointer) return;
+	Pointer->ReleasePointerKey(EKeys::LeftMouseButton);
 }

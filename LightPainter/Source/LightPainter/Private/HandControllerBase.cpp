@@ -26,6 +26,11 @@ void AHandControllerBase::BeginPlay()
 	
 }
 
+AHandControllerBase* AHandControllerBase::GetPairedController()
+{
+	return PairedController;
+}
+
 // Called every frame
 void AHandControllerBase::Tick(float DeltaTime)
 {
@@ -38,6 +43,12 @@ void AHandControllerBase::SetHand(EControllerHand ControllerHand)
 	if (!MotionController) return;
 	MotionController->SetTrackingSource(ControllerHand);
 	UpdateControllerMesh(ControllerHand);
+}
+
+void AHandControllerBase::Pair(AHandControllerBase* OtherController)
+{
+	PairedController = OtherController;
+	OtherController->PairedController = this;
 }
 
 UStaticMeshComponent* AHandControllerBase::GetControllerMesh()

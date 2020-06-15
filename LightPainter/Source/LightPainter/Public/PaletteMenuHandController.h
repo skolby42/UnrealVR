@@ -14,4 +14,15 @@ class LIGHTPAINTER_API APaletteMenuHandController : public AHandControllerBase
 {
 	GENERATED_BODY()
 
+public:
+	APaletteMenuHandController();
+
+protected:
+	void BeginPlay() override;
+
+private:
+	void ToggleDelete() override;
+
+	UPROPERTY(VisibleAnywhere)
+	class UWidgetComponent* PaletteMenu = nullptr;
 };

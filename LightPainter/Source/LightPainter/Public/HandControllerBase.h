@@ -18,6 +18,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetHand(EControllerHand Hand);
+	void Pair(AHandControllerBase* OtherController);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
@@ -27,9 +28,11 @@ public:
 
 	virtual void TriggerPressed() {}
 	virtual void TriggerReleased() {}
+	virtual void ToggleDelete() {}
 
 protected:
 	virtual void BeginPlay() override;
+	AHandControllerBase* GetPairedController();
 
 private:
 	// Default sub object
@@ -38,4 +41,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* ControllerMesh = nullptr;
+
+	UPROPERTY()
+	AHandControllerBase* PairedController = nullptr;
 };

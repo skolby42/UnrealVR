@@ -19,8 +19,12 @@ public:
 	APaintBrushHandController();
 
 	virtual void Tick(float DeltaTime) override;
+	void UpdateStroke();
 	void TriggerPressed() override;
+	void SpawnStroke();
+	void DeleteStroke();
 	void TriggerReleased() override;
+	void ToggleDelete() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,4 +42,7 @@ private:
 	//State
 	UPROPERTY()
 	AStroke* CurrentStroke = nullptr;
+
+	bool DeleteModeActive = false;
+	bool DeleteModeEnabled = false;
 };

@@ -4,6 +4,7 @@
 #include "PaletteMenu.h"
 #include "Components/Button.h"
 #include "PaintingGameMode.h"
+#include "HandControllerBase.h"
 
 bool UPaletteMenu::Initialize()
 {
@@ -12,7 +13,15 @@ bool UPaletteMenu::Initialize()
 	if (!ExitButton) return false;
 	ExitButton->OnReleased.AddDynamic(this, &UPaletteMenu::ExitButtonReleased);
 
+	if (!DeleteButton) return false;
+	DeleteButton->OnReleased.AddDynamic(this, &UPaletteMenu::DeleteButtonReleased);
+
 	return true;
+}
+
+void UPaletteMenu::SetParentController(AHandControllerBase* Controller)
+{
+	ParentController = Controller;
 }
 
 void UPaletteMenu::ExitButtonReleased()
@@ -21,4 +30,11 @@ void UPaletteMenu::ExitButtonReleased()
 	if (!GameMode) return;
 
 	GameMode->SaveAndExitLevel();
+}
+
+void UPaletteMenu::DeleteButtonReleased()
+{
+	if (!ParentController) return;
+	UE_LOG(LogTemp, Warning, TEXT("DeleteButtonReleased"))
+	ParentController->ToggleDelete();
 }

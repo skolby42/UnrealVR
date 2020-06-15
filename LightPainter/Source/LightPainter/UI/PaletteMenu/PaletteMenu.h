@@ -17,12 +17,22 @@ class LIGHTPAINTER_API UPaletteMenu : public UUserWidget
 
 public:
 	bool Initialize() override;
+	void SetParentController(class AHandControllerBase* Controller);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
 	UButton* ExitButton;
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (BindWidget))
+	UButton* DeleteButton;
+
 private:
 	UFUNCTION()
 	void ExitButtonReleased();
+
+	UFUNCTION()
+	void DeleteButtonReleased();
+
+	UPROPERTY()
+	class AHandControllerBase* ParentController = nullptr;
 };

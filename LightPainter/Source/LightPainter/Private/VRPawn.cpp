@@ -56,6 +56,9 @@ void AVRPawn::CreateHandControllers()
 		RightController->SetHand(EControllerHand::Right);
 		RightController->SetOwner(this);  // Fix for 4.22+
 	}
+
+	if (LeftController && RightController)
+		LeftController->Pair(RightController);
 }
 
 void AVRPawn::PaginateRight(float AxisValue)
