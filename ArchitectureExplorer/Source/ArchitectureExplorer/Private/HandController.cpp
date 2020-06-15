@@ -2,8 +2,9 @@
 
 
 #include "HandController.h"
-#include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -30,7 +31,7 @@ AHandController::AHandController()
 	ControllerMesh->SetupAttachment(MotionController);
 
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
-	SkeletalMesh->SetWorldRotation(FRotator(30.f, 0.f, 90.f));
+	SkeletalMesh->SetWorldRotation(FRotator(0.f, 0.f, 90.f));
 	SkeletalMesh->SetWorldLocation(FVector(-9.f, 0.5f, -5.f));
 	if (HandAnimClass)
 	{
@@ -38,6 +39,9 @@ AHandController::AHandController()
 		SkeletalMesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	}
 	SkeletalMesh->SetupAttachment(MotionController);
+
+	GrabSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GrabSphere"));
+	GrabSphere->SetupAttachment(MotionController);
 
 	PickupHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PickupHandle"));
 
@@ -214,12 +218,6 @@ UHandAnimInstance* AHandController::GetHandAnimInstance() const
 	return Cast<UHandAnimInstance>(SkeletalMesh->GetAnimInstance());
 }
 
-void AHandController::UpdateCarry()
-{
-	if (PickupLocation)
-		PickupHandle->SetTargetLocation(PickupLocation->GetComponentLocation());
-}
-
 void AHandController::ControllerRumble() const
 {
 	if (!HandHoldRumble) return;
@@ -306,13 +304,22 @@ void AHandController::StartCarry()
 			if (Component)
 			{
 				bIsCarrying = true;
-				PickupHandle->GrabComponentAtLocationWithRotation(Component, NAME_None, Component->GetComponentLocation(), Component->GetComponentRotation());
+
+				GrabComponent(Component);
 
 				if (PairedController && PairedController->IsCarrying(Component))
 					PairedController->Release();
 			}
 		}
 	}
+}
+
+void AHandController::UpdateCarry()
+{
+	if (!PickupHandle || !PickupLocation) return;
+
+	PickupHandle->SetTargetLocation(PickupLocation->GetComponentLocation());
+	PickupHandle->SetTargetRotation(PickupLocation->GetComponentRotation());
 }
 
 void AHandController::FinishCarry()
@@ -322,6 +329,20 @@ void AHandController::FinishCarry()
 		PickupHandle->ReleaseComponent();
 		bIsCarrying = false;
 	}
+}
+
+void AHandController::GrabComponent(UPrimitiveComponent* Component)
+{
+	if (!Component || !PickupLocation || !PickupHandle || !GrabSphere) return;
+
+	FVector Location = GrabSphere->GetComponentLocation() - Component->GetComponentLocation();
+	FRotator Rotation = GrabSphere->GetComponentRotation() - Component->GetComponentRotation();
+
+	PickupLocation->SetRelativeLocation(Location);
+	PickupLocation->SetRelativeRotation(Rotation);
+
+	PickupHandle->GrabComponentAtLocationWithRotation(Component, NAME_None, Component->GetComponentLocation(), Component->GetComponentRotation());
+	//PickupHandle->GrabComponentAtLocation(Component, NAME_None, Component->GetComponentLocation());
 }
 
 float AHandController::GetThumbDeadZone()

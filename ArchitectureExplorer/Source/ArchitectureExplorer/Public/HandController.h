@@ -10,6 +10,7 @@ class UHandAnimInstance;
 class UHapticFeedbackEffect_Curve;
 class UMotionControllerComponent;
 class UPhysicsHandleComponent;
+class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHandControllerDelegate);
 
@@ -43,6 +44,7 @@ public:
 
 	void Grip();
 	void StartCarry();
+	void GrabComponent(UPrimitiveComponent* Component);
 	void StartClimb();
 	void Release();
 	void FinishCarry();
@@ -79,6 +81,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ControllerMesh = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* GrabSphere = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	UHapticFeedbackEffect_Curve* HandHoldRumble = nullptr;
