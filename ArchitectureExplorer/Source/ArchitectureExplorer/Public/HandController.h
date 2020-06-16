@@ -12,8 +12,6 @@ class UMotionControllerComponent;
 class UPhysicsHandleComponent;
 class USphereComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHandControllerDelegate);
-
 UCLASS()
 class ARCHITECTUREEXPLORER_API AHandController : public AActor
 {
