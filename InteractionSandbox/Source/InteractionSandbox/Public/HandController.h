@@ -24,7 +24,7 @@ public:
 	void SetHand(EControllerHand Hand);
 	void PairController(AHandController* OtherController);
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
-	bool IsCarrying(UPrimitiveComponent* OtherActor) const;
+	bool IsHoldingComponent(UPrimitiveComponent* OtherActor) const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
@@ -41,12 +41,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void Grip();
-	void StartCarry();
-	void GrabComponent(UPrimitiveComponent* Component);
-	void StartClimb();
 	void Release();
-	void FinishCarry();
-	void FinishClimb();
+	
 	float GetThumbDeadZone();
 	void UpdateSkeletalMesh(EControllerHand Hand);
 	void SetControllerMeshVisibility(bool IsVisible);
@@ -62,11 +58,25 @@ private:
 	// Helpers
 	void ControllerRumble() const;
 	AActor* GetOverlappingActorWithTag(const FName& Tag) const;
+	UPrimitiveComponent* GetOverlappingComponentWithTag(const FName& Tag) const;
 	UHandAnimInstance* GetHandAnimInstance() const;
 	bool CanClimb() const;
-	void UpdateClimb();
 	bool CanCarry() const;
+	bool CanGrab() const;
+	
+	void StartCarry();
 	void UpdateCarry();
+	void FinishCarry();
+
+	void StartClimb();
+	void UpdateClimb();
+	void FinishClimb();
+
+	void StartGrab();
+	void UpdateGrab();
+	void FinishGrab();
+
+	void GrabComponent(UPrimitiveComponent* Component);
 	void UpdateGripHeldAnim(bool GripHeld);
 	void UpdateCanGrabAnim(bool CanGrab);
 
@@ -114,6 +124,9 @@ private:
 
 	bool bCanCarry = false;
 	bool bIsCarrying = false;
+
+	bool bCanGrab = false;
+	bool bIsGrabbing = false;
 
 	AHandController* PairedController;
 };
