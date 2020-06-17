@@ -76,7 +76,9 @@ private:
 	void UpdateGrab();
 	void FinishGrab();
 
+	void PickUpComponent(UPrimitiveComponent* Component);
 	void GrabComponent(UPrimitiveComponent* Component);
+
 	void UpdateGripHeldAnim(bool GripHeld);
 	void UpdateCanGrabAnim(bool CanGrab);
 

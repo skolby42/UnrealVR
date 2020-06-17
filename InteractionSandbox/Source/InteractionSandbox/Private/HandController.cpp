@@ -164,7 +164,7 @@ void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 		ControllerRumble();
 	}
 
-	if (!bIsGrabbing && !bCanGrab && CanGrab())
+	if (!bCanGrab && CanGrab())
 	{
 		bCanGrab = true;
 		UpdateCanGrabAnim(true);
@@ -186,18 +186,24 @@ void AHandController::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActo
 
 bool AHandController::CanClimb() const
 {
+	if (bCanClimb) return true;
+
 	AActor* Actor = GetOverlappingActorWithTag(TEXT("Climbable"));
 	return Actor != nullptr;
 }
 
 bool AHandController::CanCarry() const
 {
+	if (bIsCarrying) return true;
+
 	AActor* Actor = GetOverlappingActorWithTag(TEXT("Carry"));
 	return Actor != nullptr;
 }
 
 bool AHandController::CanGrab() const
 {
+	if (bIsGrabbing) return true;
+
 	UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Grabbable"));
 	return Component != nullptr;
 }
@@ -335,7 +341,7 @@ void AHandController::StartCarry()
 			{
 				bIsCarrying = true;
 
-				GrabComponent(Component);
+				PickUpComponent(Component);
 
 				if (PairedController && PairedController->IsHoldingComponent(Component))
 					PairedController->Release();
@@ -346,7 +352,7 @@ void AHandController::StartCarry()
 
 void AHandController::UpdateCarry()
 {
-	if (!PickupHandle || !PickupLocation) return;
+	if (!bIsCarrying || !PickupHandle || !PickupLocation) return;
 
 	PickupHandle->SetTargetLocation(PickupLocation->GetComponentLocation());
 	PickupHandle->SetTargetRotation(PickupLocation->GetComponentRotation());
@@ -380,10 +386,19 @@ void AHandController::StartGrab()
 
 void AHandController::UpdateGrab()
 {
-	if (!PickupHandle || !PickupLocation) return;
+	if (!bIsGrabbing || !PickupHandle || !GrabSphere) return;
 
-	PickupHandle->SetTargetLocation(PickupLocation->GetComponentLocation());
-	PickupHandle->SetTargetRotation(PickupLocation->GetComponentRotation());
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+
+	// Limit location update per frame
+	/*FVector Location;
+	FRotator Rotation;
+	PickupHandle->GetTargetLocationAndRotation(Location, Rotation);
+
+	FVector DeltaLocation = Location + (GrabSphere->GetComponentLocation() - Location) * DeltaSeconds;
+	PickupHandle->SetTargetLocation(DeltaLocation);*/
+
+	PickupHandle->SetTargetLocation(GrabSphere->GetComponentLocation());
 }
 
 void AHandController::FinishGrab()
@@ -395,7 +410,7 @@ void AHandController::FinishGrab()
 	}
 }
 
-void AHandController::GrabComponent(UPrimitiveComponent* Component)
+void AHandController::PickUpComponent(UPrimitiveComponent* Component)
 {
 	if (!Component || !PickupLocation || !PickupHandle || !GrabSphere) return;
 
@@ -406,7 +421,14 @@ void AHandController::GrabComponent(UPrimitiveComponent* Component)
 	PickupLocation->SetRelativeRotation(Rotation);
 
 	PickupHandle->GrabComponentAtLocationWithRotation(Component, NAME_None, Component->GetComponentLocation(), Component->GetComponentRotation());
-	//PickupHandle->GrabComponentAtLocation(Component, NAME_None, Component->GetComponentLocation());
+}
+
+void AHandController::GrabComponent(UPrimitiveComponent* Component)
+{
+	if (!Component || !PickupLocation || !PickupHandle || !GrabSphere) return;
+
+	PickupLocation->SetRelativeLocation(GrabSphere->GetComponentLocation());
+	PickupHandle->GrabComponentAtLocation(Component, NAME_None, GrabSphere->GetComponentLocation());
 }
 
 float AHandController::GetThumbDeadZone()
