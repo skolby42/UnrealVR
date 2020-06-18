@@ -24,7 +24,8 @@ public:
 	void SetHand(EControllerHand Hand);
 	void PairController(AHandController* OtherController);
 	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
-	bool IsHoldingComponent(UPrimitiveComponent* OtherActor) const;
+	bool IsHoldingComponent(UPrimitiveComponent* OtherComponent) const;
+	bool IsHoldingActor(AActor* OtherActor) const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateControllerMesh(EControllerHand Hand);
@@ -57,9 +58,11 @@ private:
 
 	// Helpers
 	void ControllerRumble() const;
+	class AActor* GetOverlappingPickupActor() const;
 	AActor* GetOverlappingActorWithTag(const FName& Tag) const;
 	UPrimitiveComponent* GetOverlappingComponentWithTag(const FName& Tag) const;
 	UHandAnimInstance* GetHandAnimInstance() const;
+
 	bool CanClimb() const;
 	bool CanCarry() const;
 	bool CanGrab() const;
@@ -68,13 +71,16 @@ private:
 	void UpdateCarry();
 	void FinishCarry();
 
+	void StartGrab();
+	void UpdateGrab();
+	void FinishGrab();
+	
 	void StartClimb();
 	void UpdateClimb();
 	void FinishClimb();
 
-	void StartGrab();
-	void UpdateGrab();
-	void FinishGrab();
+	bool AttachActor();
+	bool ReleaseActor();
 
 	void PickUpComponent(UPrimitiveComponent* Component);
 	void GrabComponent(UPrimitiveComponent* Component);
@@ -130,5 +136,6 @@ private:
 	bool bCanGrab = false;
 	bool bIsGrabbing = false;
 
-	AHandController* PairedController;
+	AHandController* PairedController = nullptr;
+	AActor* HeldActor = nullptr;
 };

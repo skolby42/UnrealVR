@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "NavigationSystem.h"
+#include "PickupActor.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 
 #include "DrawDebugHelpers.h"
@@ -49,11 +50,6 @@ AHandController::AHandController()
 	PickupLocation->SetupAttachment(MotionController);
 }
 
-UStaticMeshComponent* AHandController::GetControllerMesh()
-{
-	return ControllerMesh;
-}
-
 // Called when the game starts or when spawned
 void AHandController::BeginPlay()
 {
@@ -71,6 +67,16 @@ void AHandController::Tick(float DeltaTime)
 	UpdateClimb();
 	UpdateCarry();
 	UpdateGrab();
+}
+
+UStaticMeshComponent* AHandController::GetControllerMesh()
+{
+	return ControllerMesh;
+}
+
+float AHandController::GetThumbDeadZone()
+{
+	return ThumbDeadZone;
 }
 
 void AHandController::SetHand(EControllerHand Hand)
@@ -143,9 +149,14 @@ bool AHandController::FindTeleportDestination(TArray<FVector>& OutPath, FVector&
 	return true;
 }
 
-bool AHandController::IsHoldingComponent(UPrimitiveComponent* OtherActor) const
+bool AHandController::IsHoldingComponent(UPrimitiveComponent* OtherComponent) const
 {
-	return PickupHandle && PickupHandle->GrabbedComponent == OtherActor;
+	return (PickupHandle && PickupHandle->GrabbedComponent == OtherComponent);
+}
+
+bool AHandController::IsHoldingActor(AActor* OtherActor) const
+{
+	return (HeldActor && Cast<AActor>(HeldActor) == OtherActor);
 }
 
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -188,16 +199,19 @@ bool AHandController::CanClimb() const
 {
 	if (bCanClimb) return true;
 
-	AActor* Actor = GetOverlappingActorWithTag(TEXT("Climbable"));
-	return Actor != nullptr;
+	UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Climbable"));
+	return (Component != nullptr);
 }
 
 bool AHandController::CanCarry() const
 {
 	if (bIsCarrying) return true;
 
-	AActor* Actor = GetOverlappingActorWithTag(TEXT("Carry"));
-	return Actor != nullptr;
+	AActor* Actor = GetOverlappingPickupActor();
+	if (Actor != nullptr) return true;
+
+	UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Carryable"));
+	return (Component != nullptr);
 }
 
 bool AHandController::CanGrab() const
@@ -206,6 +220,19 @@ bool AHandController::CanGrab() const
 
 	UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Grabbable"));
 	return Component != nullptr;
+}
+
+AActor* AHandController::GetOverlappingPickupActor() const
+{
+	TArray<AActor*> OverlappingActors;
+	GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (Actor->Implements<UPickupActor>()) return Actor;
+	}
+
+	return nullptr;
 }
 
 AActor* AHandController::GetOverlappingActorWithTag(const FName& Tag) const
@@ -231,7 +258,11 @@ UPrimitiveComponent* AHandController::GetOverlappingComponentWithTag(const FName
 		if (Component->ComponentHasTag(Tag)) return Component;
 	}
 
-	return nullptr;
+	AActor* Actor = GetOverlappingActorWithTag(Tag);
+	if (!Actor) return nullptr;
+
+	UPrimitiveComponent* Component = Actor->FindComponentByClass<UPrimitiveComponent>();
+	return Component;
 }
 
 UHandAnimInstance* AHandController::GetHandAnimInstance() const
@@ -296,10 +327,9 @@ void AHandController::StartClimb()
 			PairedController->Release();
 
 		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
-		if (Character)
-		{
-			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-		}
+		if (!Character) return;
+
+		Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 	}
 }
 
@@ -322,31 +352,27 @@ void AHandController::FinishClimb()
 		bIsClimbing = false;
 
 		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
-		if (Character)
-		{
-			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
-		}
+		if (!Character) return;
+
+		Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
 	}
 }
 
 void AHandController::StartCarry()
 {
+	if (AttachActor()) return;
+
 	if (!bIsCarrying && bCanCarry)
 	{
-		AActor* Actor = GetOverlappingActorWithTag(TEXT("Carry"));
-		if (Actor)
-		{
-			UPrimitiveComponent* Component = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-			if (Component)
-			{
-				bIsCarrying = true;
+		UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Carryable"));
+		if (!Component) return;
 
-				PickUpComponent(Component);
+		bIsCarrying = true;
 
-				if (PairedController && PairedController->IsHoldingComponent(Component))
-					PairedController->Release();
-			}
-		}
+		PickUpComponent(Component);
+
+		if (PairedController && PairedController->IsHoldingComponent(Component))
+			PairedController->Release();
 	}
 }
 
@@ -360,6 +386,8 @@ void AHandController::UpdateCarry()
 
 void AHandController::FinishCarry()
 {
+	if (ReleaseActor()) return;
+
 	if (bIsCarrying && PickupHandle->GrabbedComponent)
 	{
 		PickupHandle->ReleaseComponent();
@@ -372,15 +400,14 @@ void AHandController::StartGrab()
 	if (!bIsGrabbing && bCanGrab)
 	{
 		UPrimitiveComponent* Component = GetOverlappingComponentWithTag(TEXT("Grabbable"));
-		if (Component)
-		{
-			bIsGrabbing = true;
+		if (!Component) return;
 
-			GrabComponent(Component);
+		bIsGrabbing = true;
 
-			if (PairedController && PairedController->IsHoldingComponent(Component))
-				PairedController->Release();
-		}
+		GrabComponent(Component);
+
+		if (PairedController && PairedController->IsHoldingComponent(Component))
+			PairedController->Release();
 	}
 }
 
@@ -388,26 +415,60 @@ void AHandController::UpdateGrab()
 {
 	if (!bIsGrabbing || !PickupHandle || !GrabSphere) return;
 
-	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-
 	// Limit location update per frame
-	/*FVector Location;
+	/*
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	FVector Location;
 	FRotator Rotation;
 	PickupHandle->GetTargetLocationAndRotation(Location, Rotation);
 
 	FVector DeltaLocation = Location + (GrabSphere->GetComponentLocation() - Location) * DeltaSeconds;
-	PickupHandle->SetTargetLocation(DeltaLocation);*/
+	PickupHandle->SetTargetLocation(DeltaLocation);
+	*/
 
 	PickupHandle->SetTargetLocation(GrabSphere->GetComponentLocation());
 }
 
 void AHandController::FinishGrab()
-{
-	if (bIsGrabbing && PickupHandle->GrabbedComponent)
+{	
+	if (!bIsGrabbing) return;
+
+	if (PickupHandle->GrabbedComponent)
 	{
 		PickupHandle->ReleaseComponent();
 		bIsGrabbing = false;
 	}
+}
+
+bool AHandController::AttachActor()
+{
+	HeldActor = GetOverlappingPickupActor();
+	if (HeldActor)
+	{
+		if (PairedController && PairedController->IsHoldingActor(HeldActor))
+		{
+			PairedController->Release();
+		}
+
+		IPickupActor* PickupActor = Cast<IPickupActor>(HeldActor);
+		if (!PickupActor) return false;
+
+		PickupActor->Pickup(SkeletalMesh);
+		return true;
+	}
+	return false;
+}
+
+bool AHandController::ReleaseActor()
+{
+	if (!HeldActor) return false;
+
+	IPickupActor* PickupActor = Cast<IPickupActor>(HeldActor);
+	if (!PickupActor) return false;
+
+	PickupActor->Drop();
+	HeldActor = nullptr;
+	return true;
 }
 
 void AHandController::PickUpComponent(UPrimitiveComponent* Component)
@@ -429,9 +490,4 @@ void AHandController::GrabComponent(UPrimitiveComponent* Component)
 
 	PickupLocation->SetRelativeLocation(GrabSphere->GetComponentLocation());
 	PickupHandle->GrabComponentAtLocation(Component, NAME_None, GrabSphere->GetComponentLocation());
-}
-
-float AHandController::GetThumbDeadZone()
-{
-	return ThumbDeadZone;
 }
