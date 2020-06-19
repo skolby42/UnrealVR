@@ -123,6 +123,11 @@ bool AHandController::FindTeleportDestination(TArray<FVector>& OutPath, FVector&
 		LaunchVector,
 		TeleportSimulationTime,
 		ECollisionChannel::ECC_Visibility);
+	
+	TArray<AActor*> IgnoredActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), IgnoredActors);
+	ProjectileParams.ActorsToIgnore = IgnoredActors;
+
 	//ProjectileParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
 	ProjectileParams.bTraceComplex = true;  // Get more collision locations if needed
 
