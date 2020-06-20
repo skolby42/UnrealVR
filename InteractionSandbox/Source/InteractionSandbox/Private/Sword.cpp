@@ -21,7 +21,7 @@ void ASword::Pickup(UPrimitiveComponent* AttachParent)
 	if (!SwordMesh || !AttachParent) return;
 
 	SwordMesh->SetSimulatePhysics(false);
-	SwordMesh->AttachToComponent(AttachParent, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+	SwordMesh->AttachToComponent(AttachParent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 }
 
 void ASword::Drop()
