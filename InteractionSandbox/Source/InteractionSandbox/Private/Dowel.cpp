@@ -43,7 +43,11 @@ void ADowel::Drop()
 	if (AttachPoint)
 	{
 		AttachPoint->AttachComponent(DowelMesh);
-		PreviewDowelMesh->SetVisibility(false);
+
+		if (PreviewDowelMesh)
+		{
+			PreviewDowelMesh->SetVisibility(false);
+		}
 	}
 	else
 	{
