@@ -3,12 +3,17 @@
 
 #include "HandAnimInstance.h"
 
-void UHandAnimInstance::SetCanGrab(bool Colliding)
+void UHandAnimInstance::SetCanGrab(bool NewCanGrab)
 {
-	CanGrab = Colliding;
+	CanGrab = NewCanGrab;
 }
 
-void UHandAnimInstance::SetGripHeld(bool Held)
+void UHandAnimInstance::SetGripHeld(bool NewHeld)
 {
-	GripHeld = Held;
+	GripHeld = NewHeld;
+}
+
+void UHandAnimInstance::SetGripType(EGripType NewGripType)
+{
+	GripType = NewGripType;
 }

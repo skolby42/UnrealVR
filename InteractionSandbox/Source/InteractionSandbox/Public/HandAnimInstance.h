@@ -6,6 +6,13 @@
 #include "Animation/AnimInstance.h"
 #include "HandAnimInstance.generated.h"
 
+UENUM(BlueprintType)
+enum EGripType
+{
+	Default,
+	Pistol
+};
+
 /**
  * 
  */
@@ -15,8 +22,9 @@ class INTERACTIONSANDBOX_API UHandAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
-	void SetCanGrab(bool Colliding);
-	void SetGripHeld(bool Held);
+	void SetCanGrab(bool NewCanGrab);
+	void SetGripHeld(bool NewHeld);
+	void SetGripType(EGripType NewGripType);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
@@ -24,4 +32,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	bool GripHeld = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TEnumAsByte<EGripType> GripType = EGripType::Default;
 };

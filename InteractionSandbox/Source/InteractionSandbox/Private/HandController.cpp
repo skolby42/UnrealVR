@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GunBase.h"
 #include "HandAnimInstance.h"
 #include "Haptics/HapticFeedbackEffect_Curve.h"
 #include "Kismet/GameplayStatics.h"
@@ -291,6 +292,7 @@ void AHandController::ControllerRumble() const
 
 void AHandController::Grip()
 {
+	UpdateGripTypeAnim();
 	UpdateGripHeldAnim(true);
 	StartClimb();
 	StartCarry();
@@ -319,6 +321,22 @@ void AHandController::UpdateCanGrabAnim(bool CanGrab)
 	if (!HandAnimInstance) return;
 	
 	HandAnimInstance->SetCanGrab(CanGrab);
+}
+
+void AHandController::UpdateGripTypeAnim()
+{
+	UHandAnimInstance* HandAnimInstance = GetHandAnimInstance();
+	if (!HandAnimInstance) return;
+
+	AActor* Actor = GetOverlappingPickupActor();
+	if (Actor && Cast<AGunBase>(Actor))
+	{
+		HandAnimInstance->SetGripType(EGripType::Pistol);
+	}
+	else
+	{
+		HandAnimInstance->SetGripType(EGripType::Default);
+	}
 }
 
 void AHandController::StartClimb()

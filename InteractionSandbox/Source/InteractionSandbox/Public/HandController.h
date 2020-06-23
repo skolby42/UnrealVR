@@ -87,6 +87,7 @@ private:
 
 	void UpdateGripHeldAnim(bool GripHeld);
 	void UpdateCanGrabAnim(bool CanGrab);
+	void UpdateGripTypeAnim();
 
 	// Default sub object
 	UPROPERTY(VisibleAnywhere)

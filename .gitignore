@@ -76,3 +76,4 @@ SourceArt/**/*.tga
 # 3rd party assets
 ArchitectureExplorer/Content/ArchVizAssets/*
 InteractionSandbox/Content/InfinityBladeWeapons/*
+InteractionSandbox/Content/PrototypeWeap/*
