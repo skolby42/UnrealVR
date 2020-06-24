@@ -585,6 +585,11 @@ void AHandController::UpdateDestinationMarker()
 	{
 		TeleportDestinationMarker->SetVisibility(true);
 		TeleportDestinationMarker->SetWorldLocation(Location);
+		if (GetAttachParentActor())
+		{
+			TeleportDestinationMarker->SetWorldRotation(GetAttachParentActor()->GetActorRotation());
+		}
+
 		TeleportArrow->SetVisibility(true);
 	}
 	else
