@@ -18,6 +18,7 @@ public:
 public:	
 	void Pickup(UPrimitiveComponent* AttachParent) override;
 	void Drop() override;
+	void InvertRotation() override;
 
 private:
 	UPROPERTY(VisibleAnywhere)

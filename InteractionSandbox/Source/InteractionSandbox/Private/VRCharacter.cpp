@@ -239,49 +239,49 @@ void AVRCharacter::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
 void AVRCharacter::GripLeft()
 {
 	if (!LeftController) return;
-	LeftController->GripPressed();
+	LeftController->GripPress();
 }
 
 void AVRCharacter::ReleaseLeft()
 {
 	if (!LeftController) return;
-	LeftController->GripReleased();
+	LeftController->GripRelease();
 }
 
 void AVRCharacter::GripRight()
 {
 	if (!RightController) return;
-	RightController->GripPressed();
+	RightController->GripPress();
 }
 
 void AVRCharacter::ReleaseRight()
 {
 	if (!RightController) return;
-	RightController->GripReleased();
+	RightController->GripRelease();
 }
 
 void AVRCharacter::PressLeftTrigger()
 {
 	if (!LeftController) return;
-	LeftController->TriggerPressed();
+	LeftController->TriggerPress();
 }
 
 void AVRCharacter::ReleaseLeftTrigger()
 {
 	if (!LeftController) return;
-	LeftController->TriggerReleased();
+	LeftController->TriggerRelease();
 }
 
 void AVRCharacter::PressRightTrigger()
 {
 	if (!RightController) return;
-	RightController->TriggerPressed();
+	RightController->TriggerPress();
 }
 
 void AVRCharacter::ReleaseRightTrigger()
 {
 	if (!RightController) return;
-	RightController->TriggerReleased();
+	RightController->TriggerRelease();
 }
 
 void AVRCharacter::TeleportRight(float AxisValue)

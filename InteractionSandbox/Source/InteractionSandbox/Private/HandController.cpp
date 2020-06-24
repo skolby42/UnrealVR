@@ -22,7 +22,8 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 
 #include "DrawDebugHelpers.h"
-#include "..\Public\HandController.h"
+
+#include "Engine/SkeletalMeshSocket.h"
 
 
 AHandController::AHandController()
@@ -107,12 +108,27 @@ void AHandController::SetHand(EControllerHand Hand)
 	MotionController->SetTrackingSource(Hand);
 	UpdateControllerMesh(Hand);
 	UpdateSkeletalMesh(Hand);
+	UpdateGrabSphere(Hand);
 }
 
 void AHandController::UpdateSkeletalMesh(EControllerHand Hand)
 {
 	if (Hand != EControllerHand::Left || !SkeletalMesh) return;
-	SkeletalMesh->SetWorldScale3D(FVector(1.f, 1.f, -1.f));  // Invert scale for left hand
+
+	// Invert scale for left hand
+	FVector Scale = SkeletalMesh->GetComponentScale();
+	Scale.Z *= -1;
+	SkeletalMesh->SetWorldScale3D(Scale);
+}
+
+void AHandController::UpdateGrabSphere(EControllerHand Hand)
+{
+	if (Hand != EControllerHand::Left || !GrabSphere) return;
+
+	// Invert location for left hand
+	FVector Location = GrabSphere->GetComponentLocation();
+	Location.Y *= -1;
+	GrabSphere->SetWorldLocation(Location);
 }
 
 void AHandController::SetControllerMeshVisibility(bool IsVisible)
@@ -328,7 +344,7 @@ void AHandController::ControllerRumble() const
 	PlayerController->PlayHapticEffect(HandHoldRumble, MotionController->GetTrackingSource());
 }
 
-void AHandController::TriggerPressed()
+void AHandController::TriggerPress()
 {
 	if (IsHoldingObject())
 	{
@@ -339,7 +355,7 @@ void AHandController::TriggerPressed()
 	ActivateTeleport();
 }
 
-void AHandController::TriggerReleased()
+void AHandController::TriggerRelease()
 {
 	if (IsHoldingObject())
 	{
@@ -361,7 +377,7 @@ void AHandController::SetTeleportUp(float AxisValue)
 	TeleportUpAxis = FMath::Clamp<float>(AxisValue, -1, 1);
 }
 
-void AHandController::GripPressed()
+void AHandController::GripPress()
 {
 	UpdateGripTypeAnim();
 	UpdateGripHeldAnim(true);
@@ -370,7 +386,7 @@ void AHandController::GripPressed()
 	StartGrab();
 }
 
-void AHandController::GripReleased()
+void AHandController::GripRelease()
 {
 	UpdateGripHeldAnim(false);
 	FinishClimb();
@@ -600,7 +616,7 @@ void AHandController::StartClimb()
 		ClimbStartLocation = GetActorLocation();
 
 		if (PairedController && PairedController->bIsClimbing)
-			PairedController->GripReleased();
+			PairedController->GripRelease();
 
 		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
 		if (!Character) return;
@@ -648,7 +664,7 @@ void AHandController::StartCarry()
 		PickUpComponent(Component);
 
 		if (PairedController && PairedController->IsHoldingComponent(Component))
-			PairedController->GripReleased();
+			PairedController->GripRelease();
 	}
 }
 
@@ -683,7 +699,7 @@ void AHandController::StartGrab()
 		GrabComponent(Component);
 
 		if (PairedController && PairedController->IsHoldingComponent(Component))
-			PairedController->GripReleased();
+			PairedController->GripRelease();
 	}
 }
 
@@ -723,13 +739,19 @@ bool AHandController::AttachActor()
 	{
 		if (PairedController && PairedController->IsHoldingActor(HeldActor))
 		{
-			PairedController->GripReleased();
+			PairedController->GripRelease();
 		}
 
 		IPickupActor* PickupActor = Cast<IPickupActor>(HeldActor);
 		if (!PickupActor) return false;
 
 		PickupActor->Pickup(SkeletalMesh);
+
+		if (MotionController->GetTrackingSource() == EControllerHand::Left)
+		{
+			PickupActor->InvertRotation();
+		}
+
 		return true;
 	}
 	return false;
@@ -743,6 +765,7 @@ bool AHandController::ReleaseActor()
 	if (!PickupActor) return false;
 
 	PickupActor->Drop();
+
 	HeldActor = nullptr;
 	return true;
 }

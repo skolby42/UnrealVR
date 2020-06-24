@@ -26,7 +26,6 @@ public:
 
 	void SetHand(EControllerHand Hand);
 	void PairController(AHandController* OtherController);
-	//bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
 	
 	bool IsHoldingComponent(UPrimitiveComponent* OtherComponent) const;
 	bool IsHoldingActor(AActor* OtherActor) const;
@@ -38,10 +37,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	UStaticMeshComponent* GetControllerMesh();
 
-	void GripPressed();
-	void GripReleased();
-	void TriggerPressed();
-	void TriggerReleased();
+	void GripPress();
+	void GripRelease();
+	void TriggerPress();
+	void TriggerRelease();
 	void SetTeleportRight(float AxisValue);
 	void SetTeleportUp(float AxisValue);
 
@@ -49,6 +48,7 @@ public:
 	bool IsTeleportActive();
 
 	void UpdateSkeletalMesh(EControllerHand Hand);
+	void UpdateGrabSphere(EControllerHand Hand);
 	void SetControllerMeshVisibility(bool IsVisible);
 	void SetSkeletalMeshVisibility(bool IsVisible);
 

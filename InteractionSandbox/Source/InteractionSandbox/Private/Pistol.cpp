@@ -30,3 +30,11 @@ void APistol::Drop()
 	PistolSkeletalMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	PistolSkeletalMesh->SetSimulatePhysics(true);
 }
+
+void APistol::InvertRotation()
+{
+	FRotator Rotation = PistolSkeletalMesh->GetRelativeRotation();
+	Rotation.Roll += 180;
+	Rotation.Yaw += 180;
+	PistolSkeletalMesh->SetRelativeRotation(Rotation);
+}

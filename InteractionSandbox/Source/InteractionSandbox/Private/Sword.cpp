@@ -32,3 +32,11 @@ void ASword::Drop()
 	SwordMesh->SetSimulatePhysics(true);
 }
 
+void ASword::InvertRotation()
+{
+	FRotator Rotation = SwordMesh->GetRelativeRotation();
+	Rotation.Roll += 180;
+	Rotation.Yaw += 180;
+	SwordMesh->SetRelativeRotation(Rotation);
+}
+

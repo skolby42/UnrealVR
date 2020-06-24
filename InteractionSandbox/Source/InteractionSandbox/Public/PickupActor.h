@@ -24,4 +24,5 @@ class INTERACTIONSANDBOX_API IPickupActor
 public:
 	virtual void Pickup(UPrimitiveComponent* AttachParent) {}
 	virtual void Drop() {}
+	virtual void InvertRotation() {}
 };
