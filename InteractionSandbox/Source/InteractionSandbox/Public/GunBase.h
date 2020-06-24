@@ -17,7 +17,9 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void FirePrimary() { }
+	virtual void ReleasePrimary() { }
 	virtual void FireSecondary() { }
+	virtual void ReleaseSecondary() { }
 	virtual void Reload() { }
 	
 	virtual void Pickup(UPrimitiveComponent* AttachParent) override { }
@@ -26,16 +28,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	int AmmoCount = 10;
+	TSubclassOf<class AProjectile> PrimaryProjectile = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	float ReloadTime = 1.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	TSubclassOf<class AProjectileBase> PrimaryProjectile = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	TSubclassOf<class AProjectileBase> SecondaryProjectile = nullptr;
+	TSubclassOf<class AProjectile> SecondaryProjectile = nullptr;
 };

@@ -3,6 +3,8 @@
 
 #include "Pistol.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "GunAnimInstance.h"
+#include "Projectile.h"
 
 APistol::APistol()
 {
@@ -37,4 +39,41 @@ void APistol::InvertRotation()
 	Rotation.Roll += 180;
 	Rotation.Yaw += 180;
 	PistolSkeletalMesh->SetRelativeRotation(Rotation);
+}
+
+void APistol::FirePrimary()
+{
+	UGunAnimInstance* AnimInstance = GetGunAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->SetCanFire(true);
+	}
+
+	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
+		PrimaryProjectile, 
+		PistolSkeletalMesh->GetSocketLocation(TEXT("MuzzleFlash")), 
+		PistolSkeletalMesh->GetSocketRotation(TEXT("MuzzleFlash")));
+	
+	if (!Projectile) return;
+	Projectile->Launch(LaunchVelocity);
+}
+
+void APistol::ReleasePrimary()
+{
+	UGunAnimInstance* AnimInstance = GetGunAnimInstance();
+	if (!AnimInstance) return;
+
+	AnimInstance->SetCanFire(false);
+}
+
+void APistol::Reload()
+{
+	UGunAnimInstance* AnimInstance = GetGunAnimInstance();
+	AnimInstance->SetReloading(true);
+}
+
+UGunAnimInstance* APistol::GetGunAnimInstance()
+{
+	if (!PistolSkeletalMesh) return nullptr;
+	return Cast<UGunAnimInstance>(PistolSkeletalMesh->GetAnimInstance());
 }

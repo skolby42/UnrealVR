@@ -348,7 +348,12 @@ void AHandController::TriggerPress()
 {
 	if (IsHoldingObject())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Start action"))
+		AGunBase* Gun = Cast<AGunBase>(HeldActor);
+		if (Gun)
+		{
+			Gun->FirePrimary();
+		}
+
 		return;
 	}
 
@@ -359,7 +364,12 @@ void AHandController::TriggerRelease()
 {
 	if (IsHoldingObject())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("End action"))
+		AGunBase* Gun = Cast<AGunBase>(HeldActor);
+		if (Gun)
+		{
+			Gun->ReleasePrimary();
+		}
+
 		return;
 	}
 
