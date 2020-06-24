@@ -2,9 +2,13 @@
 
 
 #include "HandController.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/SplineComponent.h"
+#include "Components/SplineMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -21,7 +25,6 @@
 #include "..\Public\HandController.h"
 
 
-// Sets default values
 AHandController::AHandController()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -49,18 +52,30 @@ AHandController::AHandController()
 
 	PickupLocation = CreateDefaultSubobject<USceneComponent>(TEXT("PickupLocation"));
 	PickupLocation->SetupAttachment(MotionController);
+
+	TeleportDestinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportDestinationMarker"));
+	TeleportDestinationMarker->SetCollisionProfileName(TEXT("NoCollision"));
+	TeleportDestinationMarker->SetupAttachment(GetRootComponent());
+
+	TeleportArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportArrow"));
+	TeleportArrow->SetCollisionProfileName(TEXT("NoCollision"));
+	TeleportArrow->SetupAttachment(TeleportDestinationMarker);
+
+	TeleportPath = CreateDefaultSubobject<USplineComponent>(TEXT("TeleportPath"));
+	TeleportPath->SetupAttachment(GetRootComponent());
 }
 
-// Called when the game starts or when spawned
 void AHandController::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	OnActorBeginOverlap.AddDynamic(this, &AHandController::ActorBeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AHandController::ActorEndOverlap);
+
+	if (TeleportDestinationMarker)
+		TeleportDestinationMarker->SetVisibility(false);
 }
 
-// Called every frame
 void AHandController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -68,6 +83,7 @@ void AHandController::Tick(float DeltaTime)
 	UpdateClimb();
 	UpdateCarry();
 	UpdateGrab();
+	UpdateDestinationMarker();
 }
 
 UStaticMeshComponent* AHandController::GetControllerMesh()
@@ -78,6 +94,11 @@ UStaticMeshComponent* AHandController::GetControllerMesh()
 float AHandController::GetThumbDeadZone()
 {
 	return ThumbDeadZone;
+}
+
+bool AHandController::IsTeleportActive()
+{
+	return bTeleportActive;
 }
 
 void AHandController::SetHand(EControllerHand Hand)
@@ -163,6 +184,11 @@ bool AHandController::IsHoldingComponent(UPrimitiveComponent* OtherComponent) co
 bool AHandController::IsHoldingActor(AActor* OtherActor) const
 {
 	return (HeldActor && Cast<AActor>(HeldActor) == OtherActor);
+}
+
+bool AHandController::IsHoldingObject() const
+{
+	return (PickupHandle && PickupHandle->GrabbedComponent != nullptr) || HeldActor != nullptr;
 }
 
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -277,6 +303,18 @@ UHandAnimInstance* AHandController::GetHandAnimInstance() const
 	return Cast<UHandAnimInstance>(SkeletalMesh->GetAnimInstance());
 }
 
+void AHandController::StartFade(float FromAlpha, float ToAlpha, float FadeDuration)
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (!PlayerController) return;
+
+	auto PlayerCameraManager = PlayerController->PlayerCameraManager;
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, FadeDuration, FLinearColor::Black);
+	}
+}
+
 void AHandController::ControllerRumble() const
 {
 	if (!HandHoldRumble) return;
@@ -290,7 +328,40 @@ void AHandController::ControllerRumble() const
 	PlayerController->PlayHapticEffect(HandHoldRumble, MotionController->GetTrackingSource());
 }
 
-void AHandController::Grip()
+void AHandController::TriggerPressed()
+{
+	if (IsHoldingObject())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start action"))
+		return;
+	}
+
+	ActivateTeleport();
+}
+
+void AHandController::TriggerReleased()
+{
+	if (IsHoldingObject())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("End action"))
+		return;
+	}
+
+	if (!bTeleportActive) return;
+	BeginTeleport();
+}
+
+void AHandController::SetTeleportRight(float AxisValue)
+{
+	TeleportRightAxis = FMath::Clamp<float>(AxisValue, -1, 1);
+}
+
+void AHandController::SetTeleportUp(float AxisValue)
+{
+	TeleportUpAxis = FMath::Clamp<float>(AxisValue, -1, 1);
+}
+
+void AHandController::GripPressed()
 {
 	UpdateGripTypeAnim();
 	UpdateGripHeldAnim(true);
@@ -299,7 +370,7 @@ void AHandController::Grip()
 	StartGrab();
 }
 
-void AHandController::Release()
+void AHandController::GripReleased()
 {
 	UpdateGripHeldAnim(false);
 	FinishClimb();
@@ -339,6 +410,188 @@ void AHandController::UpdateGripTypeAnim()
 	}
 }
 
+void AHandController::ActivateTeleport()
+{
+	if (bTeleportActive) return;
+
+	if (PairedController && PairedController->IsTeleportActive())
+	{
+		PairedController->ResetTeleport();
+	}
+
+	SetTeleportEnabled(true);
+	SetTeleportLocked(false);
+}
+
+void AHandController::BeginTeleport()
+{
+	if (!bHasTeleportDestination)
+	{
+		ResetTeleport();
+		return;
+	}
+
+	if (bTeleportLocked) return;
+
+	SetTeleportLocked(true);
+	StartFade(0.f, 1.f, TeleportFadeDuration);
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AHandController::EndTeleport, TeleportFadeDuration);
+}
+
+void AHandController::EndTeleport()
+{
+	FVector Destination = TeleportDestinationMarker->GetComponentLocation();
+
+	ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
+	if (Character)
+	{
+		Destination += Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
+		Character->SetActorLocation(Destination);
+		Character->SetActorRotation(TeleportRotation);
+	}
+
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+		PlayerController->SetControlRotation(TeleportRotation);
+
+	StartFade(1.0f, 0.f, TeleportFadeDuration);
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AHandController::ResetTeleport, TeleportFadeDuration, false);
+}
+
+void AHandController::SetTeleportEnabled(bool bEnabled)
+{
+	bTeleportActive = bEnabled;
+}
+
+void AHandController::SetTeleportLocked(bool bLocked)
+{
+	bTeleportLocked = bLocked;
+}
+
+void AHandController::DrawTeleportArc(const TArray<FVector>& Path)
+{
+	if (!TeleportPath) return;
+
+	UpdateTeleportPath(Path);
+
+	for (USplineMeshComponent* SplineMesh : TeleportArcMeshPool)
+	{
+		SplineMesh->SetVisibility(false);
+	}
+
+	for (int32 i = 0; i < Path.Num() - 1; i++)
+	{
+		USplineMeshComponent* SplineMesh = nullptr;
+		if (TeleportArcMeshPool.Num() <= i)
+		{
+			SplineMesh = NewObject<USplineMeshComponent>(this);
+			SplineMesh->SetMobility(EComponentMobility::Movable);
+			SplineMesh->AttachToComponent(TeleportPath, FAttachmentTransformRules::KeepRelativeTransform);
+
+			if (TeleportArcMesh)
+				SplineMesh->SetStaticMesh(TeleportArcMesh);
+
+			if (TeleportArcMaterial)
+				SplineMesh->SetMaterial(0, TeleportArcMaterial);
+
+			SplineMesh->RegisterComponent();  // Important for dynamic components
+
+			TeleportArcMeshPool.Add(SplineMesh);
+		}
+
+		SplineMesh = TeleportArcMeshPool[i];
+
+		FVector StartLocation, StartTangent, EndLocation, EndTangent;
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent);
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent);
+
+		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+
+		SplineMesh->SetVisibility(true);
+	}
+}
+
+void AHandController::UpdateTeleportPath(const TArray<FVector>& Path)
+{
+	if (!TeleportPath) return;
+
+	TeleportPath->ClearSplinePoints(false);
+	for (int32 i = 0; i < Path.Num(); i++)
+	{
+		FVector LocalPosition = TeleportPath->GetComponentTransform().InverseTransformPosition(Path[i]);  // Convert to local coordinates
+		FSplinePoint SplinePoint = FSplinePoint(i, LocalPosition, ESplinePointType::Curve);
+		TeleportPath->AddPoint(SplinePoint, false);
+	}
+	TeleportPath->UpdateSpline();
+}
+
+void AHandController::UpdateTeleportArrow()
+{
+	if (!bTeleportActive) return;
+
+	TeleportRotation = FRotator(0.f, GetAttachParentActor()->GetActorRotation().Yaw, 0.f);
+
+	if (FMath::Abs(TeleportUpAxis) > GetThumbDeadZone() || FMath::Abs(TeleportRightAxis) > GetThumbDeadZone())
+		TeleportRotation += FVector(TeleportUpAxis, TeleportRightAxis, 0.f).Rotation();
+
+	TeleportArrow->SetWorldRotation(TeleportRotation);
+}
+
+void AHandController::UpdateDestinationMarker()
+{
+	if (!TeleportDestinationMarker) return;
+
+	TArray<FVector> Path;
+	FVector Location;
+
+	if (!bTeleportActive)
+	{
+		ResetTeleport();
+		return;
+	}
+
+	if (bTeleportLocked)
+	{
+		TeleportDestinationMarker->SetVisibility(false);
+		TeleportArrow->SetVisibility(false);
+		TArray<FVector> EmptyPath;
+		DrawTeleportArc(EmptyPath);
+		return;
+	}
+
+	bHasTeleportDestination = FindTeleportDestination(Path, Location);
+
+	if (bHasTeleportDestination)
+	{
+		TeleportDestinationMarker->SetVisibility(true);
+		TeleportDestinationMarker->SetWorldLocation(Location);
+		TeleportArrow->SetVisibility(true);
+	}
+	else
+	{
+		Path.Empty();
+		TeleportDestinationMarker->SetVisibility(false);
+		TeleportArrow->SetVisibility(false);
+	}
+
+	DrawTeleportArc(Path);
+	UpdateTeleportArrow();
+}
+
+void AHandController::ResetTeleport()
+{
+	SetTeleportEnabled(false);
+	SetTeleportLocked(false);
+	TeleportDestinationMarker->SetVisibility(false);
+	TeleportArrow->SetVisibility(false);
+	TArray<FVector> EmptyPath;
+	DrawTeleportArc(EmptyPath);
+}
+
 void AHandController::StartClimb()
 {
 	if (bCanClimb && !bIsClimbing)
@@ -347,7 +600,7 @@ void AHandController::StartClimb()
 		ClimbStartLocation = GetActorLocation();
 
 		if (PairedController && PairedController->bIsClimbing)
-			PairedController->Release();
+			PairedController->GripReleased();
 
 		ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
 		if (!Character) return;
@@ -395,7 +648,7 @@ void AHandController::StartCarry()
 		PickUpComponent(Component);
 
 		if (PairedController && PairedController->IsHoldingComponent(Component))
-			PairedController->Release();
+			PairedController->GripReleased();
 	}
 }
 
@@ -430,7 +683,7 @@ void AHandController::StartGrab()
 		GrabComponent(Component);
 
 		if (PairedController && PairedController->IsHoldingComponent(Component))
-			PairedController->Release();
+			PairedController->GripReleased();
 	}
 }
 
@@ -470,7 +723,7 @@ bool AHandController::AttachActor()
 	{
 		if (PairedController && PairedController->IsHoldingActor(HeldActor))
 		{
-			PairedController->Release();
+			PairedController->GripReleased();
 		}
 
 		IPickupActor* PickupActor = Cast<IPickupActor>(HeldActor);

@@ -10,8 +10,6 @@ class AHandController;
 class UAnimInstance;
 class UCameraComponent;
 class UPostProcessComponent;
-class USplineComponent;
-class USplineMeshComponent;
 
 UCLASS()
 class INTERACTIONSANDBOX_API AVRCharacter : public ACharacter
@@ -38,18 +36,7 @@ private:
 	void SnapTurn(float Rotation);
 	void SyncActorToPlayspaceMovement();
 	void StartFade(float FromAlpha, float ToAlpha, float FadeDuration);
-	void ActivateTeleport();
-	void BeginTeleport();
-	void EndTeleport();
-	void SetTeleportEnabled(bool bEnabled);
-	void SetTeleportLocked(bool bLocked);
-	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation) const;
-	bool FindTeleportDestinationHMD(FVector& OutLocation) const;
-	void DrawTeleportArc(const TArray<FVector>& Path);
-	void UpdateTeleportPath(const TArray<FVector>& Path);
-	void UpdateTeleportArrow();
-	void UpdateDestinationMarker();
-	void ResetTeleport();
+
 	void CreateBlinkerMaterialInstance();
 	void UpdateBlinkers();
 	FVector2D GetBlinkerCenter();
@@ -59,6 +46,12 @@ private:
 	void ReleaseLeft();
 	void GripRight();
 	void ReleaseRight();
+	void PressLeftTrigger();
+	void ReleaseLeftTrigger();
+	void PressRightTrigger();
+	void ReleaseRightTrigger();
+	void TeleportRight(float AxisValue);
+	void TeleportUp(float AxisValue);
 
 private:
 
@@ -75,22 +68,10 @@ private:
 	USceneComponent* VRRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	USplineComponent* TeleportPath = nullptr;
-
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* DestinationMarker = nullptr;
-
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* TeleportArrow = nullptr;
-
-	UPROPERTY(VisibleAnywhere)
 	UPostProcessComponent* PostProcessComponent = nullptr;
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* BlinkerMaterialInstance = nullptr;
-
-	UPROPERTY()
-	TArray<USplineMeshComponent*> TeleportArcMeshPool;
 
 private:
 	
@@ -104,15 +85,6 @@ private:
 	float SnapTurnFadeDuration = 0.25f;
 
 	// Configuration properties
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	float TeleportFadeDuration = 1.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	UStaticMesh* TeleportArcMesh = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Teleporting")
-	UMaterialInterface* TeleportArcMaterial = nullptr;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Blinkers")
 	bool bBlinkersUseMovementDirection = false;
 
@@ -127,8 +99,4 @@ private:
 
 	// State properties
 	float BlinkerSpeedOverride = 0.f;
-	bool bTeleportActive = false;
-	bool bTeleportLocked = false;
-	FRotator TeleportRotation;
-	bool bHasTeleportDestination = false;
 };
