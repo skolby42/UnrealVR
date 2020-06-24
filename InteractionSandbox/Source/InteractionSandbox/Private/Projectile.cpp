@@ -39,14 +39,7 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnBeginOverlap);
-}
-
-void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	if (Cast<AGunBase>(OtherActor)) return;
-	UE_LOG(LogTemp, Warning, TEXT("OnHit"))
 }
 
 void AProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
