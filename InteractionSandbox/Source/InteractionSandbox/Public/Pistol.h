@@ -24,9 +24,14 @@ public:
 	void FirePrimary() override;
 	void ReleasePrimary() override;
 	void Reload() override;
+
+protected:
+	void BeginPlay() override;
 	
 private:
 	class UGunAnimInstance* GetGunAnimInstance();
+	UFUNCTION()
+	void ReloadComplete();
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root = nullptr;
@@ -38,5 +43,14 @@ private:
 	float LaunchVelocity = 3600.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	int AmmoCount = 10;
+	int ClipSize = 10;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	class USoundCue* FireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	class USoundCue* EmptyFireSound;
+
+	// State
+	int ClipAmmoRemaining = 0;
 };

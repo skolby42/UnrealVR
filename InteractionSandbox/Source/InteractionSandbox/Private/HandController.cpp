@@ -24,6 +24,7 @@
 #include "DrawDebugHelpers.h"
 
 #include "Engine/SkeletalMeshSocket.h"
+#include "..\Public\HandController.h"
 
 
 AHandController::AHandController()
@@ -375,6 +376,13 @@ void AHandController::TriggerRelease()
 
 	if (!bTeleportActive) return;
 	BeginTeleport();
+}
+
+void AHandController::Reload()
+{
+	AGunBase* Gun = Cast<AGunBase>(HeldActor);
+	if (!Gun) return;
+	Gun->Reload();
 }
 
 void AHandController::SetTeleportRight(float AxisValue)

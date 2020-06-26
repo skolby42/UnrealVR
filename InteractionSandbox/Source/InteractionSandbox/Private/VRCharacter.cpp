@@ -9,11 +9,13 @@
 #include "GameFramework/PlayerController.h"
 #include "HandController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "MotionControllerComponent.h"
 #include "NavigationSystem.h"
 #include "TimerManager.h"
 
 #include "DrawDebugHelpers.h"
+#include "..\Public\VRCharacter.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -63,6 +65,8 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("GripLeft"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseLeft);
 	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Pressed, this, &AVRCharacter::GripRight);
 	PlayerInputComponent->BindAction(TEXT("GripRight"), EInputEvent::IE_Released, this, &AVRCharacter::ReleaseRight);
+	PlayerInputComponent->BindAction(TEXT("ReloadLeft"), EInputEvent::IE_Pressed, this, &AVRCharacter::ReloadLeft);
+	PlayerInputComponent->BindAction(TEXT("ReloadRight"), EInputEvent::IE_Pressed, this, &AVRCharacter::ReloadRight);
 
 	if (bDoSnapTurn)
 	{
@@ -307,5 +311,21 @@ void AVRCharacter::TeleportUp(float AxisValue)
 	if (RightController && RightController->IsTeleportActive())
 	{
 		RightController->SetTeleportUp(AxisValue);
+	}
+}
+
+void AVRCharacter::ReloadLeft()
+{
+	if (LeftController && LeftController->IsHoldingObject())
+	{
+		LeftController->Reload();
+	}
+}
+
+void AVRCharacter::ReloadRight()
+{
+	if (RightController && RightController->IsHoldingObject())
+	{
+		RightController->Reload();
 	}
 }

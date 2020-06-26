@@ -4,7 +4,9 @@
 #include "Pistol.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GunAnimInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Projectile.h"
+#include "Sound/SoundCue.h"
 
 APistol::APistol()
 {
@@ -15,6 +17,13 @@ APistol::APistol()
 
 	PistolSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
 	PistolSkeletalMesh->SetupAttachment(Root);
+}
+
+void APistol::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ClipAmmoRemaining = ClipSize;
 }
 
 void APistol::Pickup(UPrimitiveComponent* AttachParent)
@@ -49,13 +58,26 @@ void APistol::FirePrimary()
 		AnimInstance->SetCanFire(true);
 	}
 
-	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
-		PrimaryProjectile, 
-		PistolSkeletalMesh->GetSocketLocation(TEXT("MuzzleFlash")), 
-		PistolSkeletalMesh->GetSocketRotation(TEXT("MuzzleFlash")));
-	
-	if (!Projectile) return;
-	Projectile->Launch(LaunchVelocity);
+	FVector SpawnLocation = PistolSkeletalMesh->GetSocketLocation(TEXT("MuzzleFlash"));
+
+	if (ClipAmmoRemaining <= 0)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyFireSound, SpawnLocation);
+	}
+	else
+	{
+		AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
+			PrimaryProjectile,
+			SpawnLocation,
+			PistolSkeletalMesh->GetSocketRotation(TEXT("MuzzleFlash")));
+
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSound, SpawnLocation);
+
+		if (!Projectile) return;
+		Projectile->Launch(LaunchVelocity);
+
+		ClipAmmoRemaining--;
+	}
 }
 
 void APistol::ReleasePrimary()
@@ -69,7 +91,22 @@ void APistol::ReleasePrimary()
 void APistol::Reload()
 {
 	UGunAnimInstance* AnimInstance = GetGunAnimInstance();
-	AnimInstance->SetReloading(true);
+	if (AnimInstance)
+	{
+		AnimInstance->SetReloading(true);
+		AnimInstance->OnReloadComplete.AddDynamic(this, &APistol::ReloadComplete);
+	}
+}
+
+void APistol::ReloadComplete()
+{
+	ClipAmmoRemaining = ClipSize;
+
+	UGunAnimInstance* AnimInstance = GetGunAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->OnReloadComplete.RemoveDynamic(this, &APistol::ReloadComplete);
+	}
 }
 
 UGunAnimInstance* APistol::GetGunAnimInstance()
@@ -77,3 +114,5 @@ UGunAnimInstance* APistol::GetGunAnimInstance()
 	if (!PistolSkeletalMesh) return nullptr;
 	return Cast<UGunAnimInstance>(PistolSkeletalMesh->GetAnimInstance());
 }
+
+

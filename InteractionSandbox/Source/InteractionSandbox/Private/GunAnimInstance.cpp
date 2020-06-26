@@ -3,14 +3,24 @@
 
 #include "GunAnimInstance.h"
 
-void UGunAnimInstance::SetCanFire(bool Value)
+bool UGunAnimInstance::GetCanFire() const
 {
-	bCanFire = Value;
+	return bCanFire;
 }
 
-void UGunAnimInstance::SetReloading(bool Value)
+void UGunAnimInstance::SetCanFire(bool bNewCanFire)
 {
-	bReloading = Value;
+	bCanFire = bNewCanFire;
+}
 
-	if (bReloading) bCanFire = false;
+void UGunAnimInstance::SetReloading(bool bNewReloading)
+{
+	bReloading = bNewReloading;
+	bCanFire = !bReloading;
+}
+
+void UGunAnimInstance::ReloadComplete()
+{
+	SetReloading(false);
+	OnReloadComplete.Broadcast();
 }

@@ -6,6 +6,8 @@
 #include "Animation/AnimInstance.h"
 #include "GunAnimInstance.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGunAnimInstanceDelegate);
+
 /**
  * 
  */
@@ -15,10 +17,16 @@ class INTERACTIONSANDBOX_API UGunAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
-	void SetCanFire(bool Value);
-	void SetReloading(bool Value);
+	bool GetCanFire() const;
+	void SetCanFire(bool bNewCanFire);
+	void SetReloading(bool bNewReloading);
+
+	FGunAnimInstanceDelegate OnReloadComplete;
 
 protected:
+	UFUNCTION(BlueprintCallable)
+	void ReloadComplete();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	bool bCanFire = false;
 

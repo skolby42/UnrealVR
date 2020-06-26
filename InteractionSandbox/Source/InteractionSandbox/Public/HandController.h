@@ -41,6 +41,7 @@ public:
 	void GripRelease();
 	void TriggerPress();
 	void TriggerRelease();
+	void Reload();
 	void SetTeleportRight(float AxisValue);
 	void SetTeleportUp(float AxisValue);
 

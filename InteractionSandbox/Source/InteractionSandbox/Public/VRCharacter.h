@@ -52,6 +52,8 @@ private:
 	void ReleaseRightTrigger();
 	void TeleportRight(float AxisValue);
 	void TeleportUp(float AxisValue);
+	void ReloadLeft();
+	void ReloadRight();
 
 private:
 
