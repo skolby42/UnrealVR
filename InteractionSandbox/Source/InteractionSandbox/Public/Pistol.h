@@ -1,4 +1,4 @@
-// Copyright Scott Kolby 2020
+// Copyright Scott Kolby 2021
 
 #pragma once
 
@@ -22,6 +22,7 @@ public:
 	void InvertRotation() override;
 
 	void FirePrimary() override;
+	void LaunchProjectile(FVector& SpawnLocation, FRotator& SpawnRotation);
 	void ReleasePrimary() override;
 	void Reload() override;
 
@@ -38,6 +39,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class USkeletalMeshComponent* PistolSkeletalMesh = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Particles")
+	class UParticleSystem* MuzzleFlash = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	float LaunchVelocity = 3600.f;

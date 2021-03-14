@@ -1,8 +1,9 @@
-// Copyright Scott Kolby 2020
+// Copyright Scott Kolby 2021
 
 
 #include "Pistol.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Particles/ParticleSystem.h"
 #include "GunAnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Projectile.h"
@@ -59,6 +60,7 @@ void APistol::FirePrimary()
 	}
 
 	FVector SpawnLocation = PistolSkeletalMesh->GetSocketLocation(TEXT("MuzzleFlash"));
+	FRotator SpawnRotation = PistolSkeletalMesh->GetSocketRotation(TEXT("MuzzleFlash"));
 
 	if (ClipAmmoRemaining <= 0)
 	{
@@ -66,18 +68,20 @@ void APistol::FirePrimary()
 	}
 	else
 	{
-		AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
-			PrimaryProjectile,
-			SpawnLocation,
-			PistolSkeletalMesh->GetSocketRotation(TEXT("MuzzleFlash")));
+		LaunchProjectile(SpawnLocation, SpawnRotation);
 
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SpawnLocation);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSound, SpawnLocation);
+	}
+}
 
-		if (!Projectile) return;
+void APistol::LaunchProjectile(FVector& SpawnLocation, FRotator& SpawnRotation)
+{
+	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(PrimaryProjectile, SpawnLocation, SpawnRotation);
+	if (Projectile)
 		Projectile->Launch(LaunchVelocity);
 
-		ClipAmmoRemaining--;
-	}
+	ClipAmmoRemaining--;
 }
 
 void APistol::ReleasePrimary()
