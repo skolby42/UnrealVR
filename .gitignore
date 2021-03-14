@@ -73,6 +73,9 @@ SourceArt/**/*.tga
 # Cache files for the editor to use
 */DerivedDataCache/*
 
+# Plugins
+*/Plugins/*
+
 # 3rd party assets
 ArchitectureExplorer/Content/ArchVizAssets/*
 InteractionSandbox/Content/InfinityBladeWeapons/*
