@@ -1,4 +1,4 @@
-// Copyright Scott Kolby 2020
+// Copyright Scott Kolby 2021
 
 #pragma once
 

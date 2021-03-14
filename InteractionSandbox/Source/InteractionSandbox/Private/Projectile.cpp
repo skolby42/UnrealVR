@@ -1,4 +1,4 @@
-// Copyright Scott Kolby 2020
+// Copyright Scott Kolby 2021
 
 
 #include "Projectile.h"
@@ -45,6 +45,8 @@ void AProjectile::BeginPlay()
 void AProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (Cast<AGunBase>(OtherActor)) return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("OtherActor: %s"), *OtherActor->GetName());
 
 	ImpactBlast->Activate();
 

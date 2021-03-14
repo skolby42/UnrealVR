@@ -1,4 +1,4 @@
-// Copyright Scott Kolby 2020
+// Copyright Scott Kolby 2021
 
 #include "VRCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -15,7 +15,6 @@
 #include "TimerManager.h"
 
 #include "DrawDebugHelpers.h"
-#include "..\Public\VRCharacter.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
